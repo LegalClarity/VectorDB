@@ -7,7 +7,7 @@ from typing import List, Optional, BinaryIO
 from fastapi import UploadFile, HTTPException
 from pathlib import Path
 
-from app.config import settings
+from config import settings
 
 logger = logging.getLogger(__name__)
 
