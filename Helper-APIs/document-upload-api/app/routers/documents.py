@@ -8,12 +8,12 @@ from datetime import datetime
 from fastapi import APIRouter, UploadFile, File, Form, HTTPException, Query, BackgroundTasks
 from fastapi.responses import JSONResponse
 
-from app.config import settings
-from app.models import Document, UploadResponse, BatchUploadResponse
-from app.schemas import DocumentResponse, DocumentListResponse, DocumentFilter, SignedURLResponse
-from app.database import document_repo, user_repo
-from app.gcs_service import gcs_service
-from app.validation import document_validator, ValidationResult
+from config import settings
+from models import Document, UploadResponse, BatchUploadResponse
+from schemas import DocumentResponse, DocumentListResponse, DocumentFilter, SignedURLResponse
+from database import document_repo, user_repo
+from gcs_service import gcs_service
+from validation import document_validator, ValidationResult
 
 router = APIRouter()
 logger = logging.getLogger(__name__)

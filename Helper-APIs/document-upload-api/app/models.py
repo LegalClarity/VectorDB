@@ -7,11 +7,14 @@ from pydantic import BaseModel, Field
 from bson import ObjectId
 
 
+from pydantic_core import core_schema
+
 class PyObjectId(ObjectId):
     """Custom ObjectId for Pydantic models"""
+
     @classmethod
-    def __get_validators__(cls):
-        yield cls.validate
+    def __get_pydantic_core_schema__(cls, source_type, handler):
+        return core_schema.no_info_plain_validator_function(cls.validate)
 
     @classmethod
     def validate(cls, v):
@@ -20,8 +23,8 @@ class PyObjectId(ObjectId):
         return ObjectId(v)
 
     @classmethod
-    def __modify_schema__(cls, field_schema):
-        field_schema.update(type="string")
+    def __get_pydantic_json_schema__(cls, core_schema, handler):
+        return {"type": "string"}
 
 
 class FileMetadata(BaseModel):

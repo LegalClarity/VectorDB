@@ -7,8 +7,8 @@ from datetime import datetime
 from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase, AsyncIOMotorCollection
 from pymongo.errors import ConnectionFailure, OperationFailure
 
-from app.config import settings
-from app.models import Document, User, DocumentCreateRequest, DocumentUpdateRequest
+from config import settings
+from models import Document, User, DocumentCreateRequest, DocumentUpdateRequest
 
 logger = logging.getLogger(__name__)
 
