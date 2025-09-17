@@ -26,7 +26,7 @@ class QdrantVectorStore:
 
     def __init__(self,
                  collection_name: str = "legal_documents",
-                 embedding_model_name: str = "sentence-transformers/all-MiniLM-L6-v2"):
+                 embedding_model_name: str = "google/embeddinggemma-300m"):
         """
         Initialize the vector store.
 
@@ -79,7 +79,7 @@ class QdrantVectorStore:
                 self.client.create_collection(
                     collection_name=self.collection_name,
                     vectors_config=VectorParams(
-                        size=384,  # all-MiniLM-L6-v2 produces 384-dimensional vectors
+                        size=768,  # EmbeddingGemma-300M produces 768-dimensional vectors
                         distance=Distance.COSINE
                     )
                 )
