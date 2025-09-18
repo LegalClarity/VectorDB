@@ -58,7 +58,28 @@ app_module/
 
 #### Code Quality Standards
 ```python
-# ✅ Good Example
+# ✅ Pydantic V2 Migration - Good Example
+class Document(BaseModel):
+    """Main document model for MongoDB"""
+    id: Optional[PyObjectId] = Field(default_factory=PyObjectId, alias="_id")
+    user_id: str
+    document_id: str
+    original_filename: str
+    stored_filename: str
+    gcs_bucket_name: str
+    gcs_object_path: str
+    file_metadata: FileMetadata
+    document_metadata: DocumentMetadata
+    timestamps: Timestamps
+    status: Status
+
+    # Pydantic V2 Configuration (No more deprecation warnings)
+    model_config = {
+        "populate_by_name": True,  # Replaces allow_population_by_field_name
+        "arbitrary_types_allowed": True,
+        "json_encoders": {ObjectId: str}
+    }
+
 def process_legal_document(
     document_id: str,
     user_id: str,
@@ -80,9 +101,13 @@ def process_legal_document(
     """
     pass
 
-# ❌ Bad Example
-def process(docid, uid, opts=None):  # No type hints, unclear names
-    pass  # No docstring, unclear behavior
+# ❌ Bad Example - Old Pydantic V1 style
+class OldDocument(BaseModel):
+    user_id: str
+    document_id: str
+
+    class Config:  # Deprecated in Pydantic V2
+        allow_population_by_field_name = True  # Causes warnings
 ```
 
 ### Asynchronous Programming Patterns
@@ -278,6 +303,53 @@ async def list_documents(
     }
 }
 ```
+
+### API Organization Patterns
+
+#### Tag-Based Endpoint Organization
+Legal Clarity implements tag-based API organization for better documentation and maintainability:
+
+```python
+# ✅ Tag-Based Router Organization
+from fastapi import APIRouter
+
+# Health endpoints
+health_router = APIRouter(tags=["health"])
+@health_router.get("/health")
+async def health_check(): pass
+
+# Document management endpoints
+documents_router = APIRouter(tags=["documents"])
+@documents_router.post("/upload")
+async def upload_document(): pass
+
+# Document analysis endpoints
+analyzer_router = APIRouter(tags=["analyzer"])
+@analyzer_router.post("/analyze")
+async def analyze_document(): pass
+
+# Vector database endpoints
+vectordb_router = APIRouter(tags=["vectordb"])
+@vectordb_router.get("/status")
+async def vectordb_status(): pass
+
+# Main application with tag metadata
+tags_metadata = [
+    {"name": "health", "description": "Health check and system status endpoints"},
+    {"name": "documents", "description": "Document upload, management and retrieval operations"},
+    {"name": "analyzer", "description": "Document analysis and processing operations"},
+    {"name": "vectordb", "description": "Vector database operations and RAG functionality"}
+]
+
+app = FastAPI(openapi_tags=tags_metadata)
+```
+
+#### Benefits of Tag Organization
+- **Clear Separation**: Related endpoints grouped logically
+- **Better Documentation**: Swagger UI groups endpoints by functionality
+- **Future Scalability**: Easy to add new API categories
+- **Maintenance**: Easier to locate and modify related endpoints
+- **Testing**: Tag-based testing organization
 
 ### Testing Patterns
 
@@ -483,4 +555,4 @@ CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
 
 ---
 
-*Document Version: 1.0 | Last Updated: September 2025 | Development Standards Committee*
+*Document Version: 1.1 | Last Updated: September 18, 2025 | Development Standards Committee*
