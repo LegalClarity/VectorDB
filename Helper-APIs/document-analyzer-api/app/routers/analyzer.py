@@ -9,10 +9,10 @@ from fastapi import APIRouter, HTTPException, Depends, BackgroundTasks, Query
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 
-from ..services.document_analyzer import DocumentAnalyzerService
-from ..services.database_service import DatabaseService
-from ..services.gcs_service import GCSService
-from ..models.schemas.processed_document import ProcessedDocumentSchema
+from services.document_analyzer import DocumentAnalyzerService
+from services.database_service import DatabaseService
+from services.gcs_service import GCSService
+from models.schemas.processed_document import ProcessedDocumentSchema
 
 logger = logging.getLogger(__name__)
 

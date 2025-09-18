@@ -4,84 +4,318 @@ AI-powered legal document analysis using LangExtract and Google Gemini Flash.
 
 ## Overview
 
-The Document Analyzer API provides intelligent analysis of legal documents including:
+The Document Analyzer API is a sophisticated AI-powered platform designed to transform complex legal documents into accessible, actionable insights. Built with cutting-edge natural language processing and machine learning technologies, it provides comprehensive analysis of various legal document types including rental agreements, loan contracts, and terms of service.
 
-- **Rental Agreements**: Extract parties, property details, financial terms, and legal clauses
-- **Loan Agreements**: Analyze loan terms, interest rates, repayment schedules, and compliance
-- **Terms of Service**: Review user rights, liabilities, and compliance requirements
+### Core Capabilities
 
-## Features
+The API leverages **LangExtract** with **Google Gemini Flash** to perform:
 
-- 🤖 **AI-Powered Analysis**: Uses LangExtract with Gemini Flash for accurate extraction
-- 📊 **Structured Output**: Provides categorized clauses, risk assessments, and compliance checks
-- 🔍 **Risk Assessment**: Identifies potential legal and financial risks
-- 📋 **Compliance Checking**: Validates documents against legal requirements
-- 💰 **Financial Analysis**: Extracts and analyzes monetary values and obligations
-- 🔗 **Source Grounding**: Links extracted information to original document locations
+- **Intelligent Entity Extraction**: Automatically identifies and categorizes key information from legal documents
+- **Risk Assessment**: Evaluates legal and financial risks based on extracted information
+- **Compliance Validation**: Checks documents against regulatory requirements
+- **Financial Analysis**: Extracts and analyzes monetary values, payment obligations, and financial implications
+- **Source Grounding**: Provides traceable links between extracted information and original document content
+
+## Supported Document Types
+
+### 🏠 Rental Agreements
+**Analysis Focus**: Parties, property details, financial terms, lease duration, and legal compliance
+- Landlord and tenant identification
+- Property specifications and location
+- Rent amounts, security deposits, and payment terms
+- Lease duration and renewal conditions
+- Maintenance responsibilities and termination clauses
+- Registration requirements and legal compliance
+
+### 💰 Loan Agreements
+**Analysis Focus**: Loan terms, repayment schedules, interest structures, and regulatory compliance
+- Lender and borrower details
+- Principal amounts and interest rates
+- Repayment terms and EMI calculations
+- Security and collateral information
+- Default provisions and recovery mechanisms
+- RBI compliance and regulatory requirements
+
+### 📄 Terms of Service
+**Analysis Focus**: User rights, provider obligations, liability limitations, and dispute resolution
+- Service provider identification
+- User eligibility and usage rights
+- Pricing structures and payment terms
+- Liability limitations and disclaimers
+- Data privacy and protection policies
+- Governing law and jurisdiction clauses
+
+## Architecture Overview
+
+### System Components
+
+```mermaid
+graph TB
+    subgraph "API Layer"
+        FASTAPI[FastAPI Application]
+        ROUTERS[RESTful Routers]
+        MIDDLEWARE[CORS & Security Middleware]
+    end
+
+    subgraph "Service Layer"
+        ANALYZER[Document Analyzer Service]
+        DATABASE[Database Service]
+        GCS[GCS Service]
+    end
+
+    subgraph "AI Processing Layer"
+        LANGEXTRACT[LangExtract Engine]
+        GEMINI[Gemini Flash API]
+        EXTRACTOR[Legal Document Extractor]
+    end
+
+    subgraph "Data Layer"
+        MONGODB[(MongoDB)]
+        GCS_STORAGE[(Google Cloud Storage)]
+    end
+
+    FASTAPI --> ANALYZER
+    ANALYZER --> LANGEXTRACT
+    ANALYZER --> GEMINI
+    FASTAPI --> DATABASE
+    FASTAPI --> GCS
+    DATABASE --> MONGODB
+    GCS --> GCS_STORAGE
+```
+
+### Processing Pipeline
+
+1. **Document Ingestion**: API receives document requests with metadata
+2. **Content Extraction**: Downloads and extracts text from GCS-stored documents
+3. **AI Analysis**: LangExtract processes text using Gemini Flash with legal-specific prompts
+4. **Structured Processing**: Converts raw extractions into categorized legal information
+5. **Risk Assessment**: Evaluates legal and financial risks based on extracted data
+6. **Compliance Checking**: Validates against regulatory requirements
+7. **Result Storage**: Saves structured analysis results to MongoDB
+8. **Response Generation**: Returns comprehensive analysis to client
+
+## Key Features
+
+- 🤖 **Advanced AI Processing**: Combines LangExtract's extraction capabilities with Gemini Flash's reasoning
+- 📊 **Comprehensive Analysis**: Multi-dimensional analysis including legal, financial, and compliance aspects
+- 🔍 **Intelligent Risk Detection**: Automated identification of potential legal and financial risks
+- 📋 **Regulatory Compliance**: Built-in compliance checking for Indian legal requirements
+- 💰 **Financial Intelligence**: Advanced financial analysis and cost-benefit assessments
+- 🔗 **Source Traceability**: Complete traceability from extracted information to source documents
+- ⚡ **High Performance**: Asynchronous processing with optimized API response times
+- 🛡️ **Enterprise Security**: Secure document handling with encryption and access controls
 
 ## Quick Start
 
 ### Prerequisites
 
-1. **Python 3.8+**
-2. **Google Cloud Project** with Gemini API enabled
-3. **MongoDB** database
-4. **Google Cloud Storage** bucket for documents
+#### System Requirements
+- **Python**: 3.8 or higher
+- **Memory**: Minimum 4GB RAM (8GB recommended for production)
+- **Storage**: 1GB free disk space for dependencies and temporary files
+
+#### External Services
+- **Google Cloud Project** with Gemini API enabled
+- **Google Cloud Storage** bucket for document storage
+- **MongoDB** database (local or cloud instance)
+- **Google Service Account** with appropriate permissions
+
+#### API Keys and Credentials
+- **Gemini API Key**: For AI processing capabilities
+- **Google Cloud Service Account Key**: For GCS access
+- **MongoDB Connection String**: For data persistence
 
 ### Installation
 
-1. **Clone and navigate to the project:**
+#### 1. Environment Setup
+
 ```bash
+# Create and activate conda environment (recommended)
+conda create -n legal-clarity python=3.9
+conda activate legal-clarity
+
+# Or use venv
+python -m venv legal_clarity_env
+source legal_clarity_env/bin/activate  # Linux/Mac
+# legal_clarity_env\Scripts\activate    # Windows
+```
+
+#### 2. Clone and Setup Project
+
+```bash
+# Navigate to the project directory
 cd Helper-APIs/document-analyzer-api
-```
 
-2. **Install dependencies:**
-```bash
+# Install Python dependencies
 pip install -r requirements.txt
+
+# Verify installation
+python -c "import langextract, google.generativeai, motor; print('✅ All dependencies installed')"
 ```
 
-3. **Set up environment variables:**
+#### 3. Google Cloud Setup
+
 ```bash
-# Copy and edit the .env file
-cp .env.example .env
+# Set up Google Cloud credentials
+export GOOGLE_APPLICATION_CREDENTIALS="path/to/your/service-account.json"
 
-# Edit .env with your configuration
+# Or place the service account file in the project root and update .env
 ```
 
-### Environment Configuration
+### Configuration
 
-Create a `.env` file with the following variables:
+#### Environment Variables
+
+Create a `.env` file in the project root with the following configuration:
 
 ```env
-# Google Cloud Configuration
+# ===========================================
+# GOOGLE CLOUD CONFIGURATION
+# ===========================================
 GEMINI_API_KEY=your_gemini_api_key_here
 GEMINI_MODEL=gemini-2.0-flash-exp
 GOOGLE_PROJECT_ID=your_project_id
-USER_DOC_BUCKET=your_gcs_bucket_name
+GOOGLE_REGION=asia-south1
+USER_DOC_BUCKET=legal-clarity-documents
+GOOGLE_APPLICATION_CREDENTIALS=path/to/service-account.json
 
-# MongoDB Configuration
+# ===========================================
+# DATABASE CONFIGURATION
+# ===========================================
 MONGO_URI=mongodb://localhost:27017
 MONGO_DB=LegalClarity
+MONGO_USERS_COLLECTION=users
+MONGO_DOCS_COLLECTION=documents
 MONGO_PROCESSED_DOCS_COLLECTION=processed_documents
 
-# Application Configuration
+# ===========================================
+# APPLICATION CONFIGURATION
+# ===========================================
 DEBUG=true
 LOG_LEVEL=INFO
 API_HOST=0.0.0.0
 API_PORT=8000
+API_WORKERS=1
+
+# ===========================================
+# SECURITY CONFIGURATION
+# ===========================================
+SECRET_KEY=your-256-bit-secret-key-here
+JWT_SECRET_KEY=your-jwt-secret-key-here
+JWT_ALGORITHM=HS256
+JWT_EXPIRATION_HOURS=24
+
+# ===========================================
+# FILE PROCESSING CONFIGURATION
+# ===========================================
+MAX_FILE_SIZE_MB=10
+ALLOWED_FILE_TYPES=.pdf,.txt,.docx
+
+# ===========================================
+# ANALYSIS CONFIGURATION
+# ===========================================
+MAX_EXTRACTION_PASSES=2
+EXTRACTION_TIMEOUT_SECONDS=300
 ```
 
-### Running the API
+#### Service Account Setup
+
+1. **Create Google Cloud Project**
+2. **Enable Required APIs**:
+   - Gemini API
+   - Cloud Storage API
+   - Document AI API (optional)
+3. **Create Service Account** with these roles:
+   - `roles/aiplatform.user`
+   - `roles/storage.objectAdmin`
+   - `roles/storage.bucketViewer`
+4. **Download Service Account Key** (JSON format)
+5. **Set Environment Variable**:
+   ```bash
+   export GOOGLE_APPLICATION_CREDENTIALS="path/to/service-account-key.json"
+   ```
+
+#### MongoDB Setup
+
+**Option 1: Local MongoDB**
+```bash
+# Install MongoDB locally
+# Ubuntu/Debian
+sudo apt-get install mongodb
+
+# macOS
+brew install mongodb-community
+
+# Windows: Download from mongodb.com
+
+# Start MongoDB
+mongod --dbpath /path/to/db
+```
+
+**Option 2: MongoDB Atlas (Cloud)**
+1. Create MongoDB Atlas account
+2. Create cluster and database
+3. Get connection string
+4. Update `MONGO_URI` in `.env`
+
+### Running the Application
+
+#### Development Mode
 
 ```bash
-# Development mode
+# Start the API server
 python -m app.main
 
-# Production mode
-uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 4
+# Or with uvicorn directly
+uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
-The API will be available at `http://localhost:8000`
+#### Production Mode
+
+```bash
+# Using uvicorn with multiple workers
+uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 4
+
+# Using gunicorn (recommended for production)
+gunicorn app.main:app -w 4 -k uvicorn.workers.UvicornWorker --bind 0.0.0.0:8000
+```
+
+#### Docker Deployment (Optional)
+
+```dockerfile
+# Dockerfile
+FROM python:3.9-slim
+
+WORKDIR /app
+COPY requirements.txt .
+RUN pip install -r requirements.txt
+
+COPY . .
+EXPOSE 8000
+
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+```
+
+```bash
+# Build and run
+docker build -t legal-clarity-analyzer .
+docker run -p 8000:8000 legal-clarity-analyzer
+```
+
+### Verification
+
+Once the API is running, verify it's working:
+
+```bash
+# Health check
+curl http://localhost:8000/health
+
+# API information
+curl http://localhost:8000/info
+
+# Interactive API documentation
+open http://localhost:8000/docs
+```
 
 ## API Endpoints
 

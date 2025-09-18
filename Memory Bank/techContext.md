@@ -14,6 +14,7 @@ Legal Clarity is built as a **monorepo FastAPI application** with modular compon
 
 #### AI and Machine Learning Stack
 - **Google Gemini API**: Multi-modal document understanding and generation
+- **LangExtract**: Advanced document extraction with source grounding
 - **Google Cloud Document AI**: Advanced OCR and document processing
 - **Google Cloud Vertex AI**: Embeddings and custom model hosting
 - **LangChain/LangGraph**: Orchestration framework for complex AI workflows
@@ -68,6 +69,16 @@ GET    /documents/{document_id}       # Retrieve document metadata
 GET    /documents                     # List user documents with pagination
 DELETE /documents/{document_id}       # Delete document
 GET    /documents/{document_id}/url   # Generate signed download URL
+```
+
+#### Document Analyzer API
+```python
+POST   /analyzer/analyze              # Analyze document with AI
+GET    /analyzer/results/{doc_id}     # Get analysis results
+GET    /analyzer/documents            # List analyzed documents
+GET    /analyzer/stats/{user_id}      # Get user statistics
+DELETE /analyzer/results/{doc_id}     # Delete analysis results
+GET    /analyzer/health               # Analyzer health check
 ```
 
 #### RAG Chatbot API
@@ -163,6 +174,40 @@ graph TD
     created_at: Date,
     updated_at: Date
   }
+}
+```
+
+**Processed Documents Collection**:
+```javascript
+{
+  _id: ObjectId,
+  document_id: String,
+  document_type: String,
+  user_id: String,
+  file_name: String,
+  file_size: Number,
+  gcs_path: String,
+  processing_id: String,
+  processing_started_at: Date,
+  processing_completed_at: Date,
+  processing_duration_seconds: Number,
+  status: String,
+  error_message: String,
+  analysis_result: {
+    extracted_entities: [Object],
+    source_grounding: Object,
+    extraction_metadata: Object,
+    document_clauses: Object,
+    risk_assessment: Object,
+    compliance_check: Object,
+    financial_analysis: Object,
+    summary: String,
+    key_terms: [String],
+    actionable_insights: [String]
+  },
+  created_at: Date,
+  updated_at: Date,
+  version: String
 }
 ```
 

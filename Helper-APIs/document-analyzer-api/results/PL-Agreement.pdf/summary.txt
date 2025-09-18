@@ -1,0 +1,17 @@
+Document Analysis Summary
+========================
+
+Document: PL-Agreement.pdf
+Type: tos
+Analysis Date: 2025-09-18T18:14:04.706060
+Status: completed
+
+Summary:
+This is a tos document with 2 key entities identified through mock analysis.
+
+Key Terms:
+- Mock term 1
+- Mock term 2
+
+Risk Level: medium
+Compliance Score: 75.0

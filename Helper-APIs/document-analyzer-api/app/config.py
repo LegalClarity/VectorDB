@@ -5,6 +5,10 @@ Configuration settings for Document Analyzer API
 import os
 from typing import Optional
 from pydantic_settings import BaseSettings
+from dotenv import load_dotenv
+
+# Load environment variables from root .env file
+load_dotenv(os.path.join(os.path.dirname(__file__), "..", "..", "..", ".env"))
 
 
 class Settings(BaseSettings):
@@ -17,6 +21,11 @@ class Settings(BaseSettings):
     GOOGLE_REGION: str = os.getenv("GOOGLE_REGION")
     USER_DOC_BUCKET: str = os.getenv("USER_DOC_BUCKET")
     GOOGLE_CREDENTIALS_PATH: Optional[str] = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
+
+    # GCS Configuration (for compatibility with GCS service)
+    google_project_id: str = os.getenv("GOOGLE_PROJECT_ID")
+    user_doc_bucket: str = os.getenv("USER_DOC_BUCKET")
+    gcs_service_account_path: Optional[str] = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
 
     # Qdrant Configuration
     QDRANT_API_KEY: str = os.getenv("QDRANT_API_KEY")
@@ -54,8 +63,9 @@ class Settings(BaseSettings):
 
     class Config:
         """Pydantic configuration"""
-        env_file = ".env"
+        env_file = os.path.join(os.path.dirname(__file__), "..", "..", "..", ".env")  # Absolute path to root .env file
         case_sensitive = False
+        extra = "ignore"  # Ignore extra fields from .env file
 
 
 # Global settings instance
