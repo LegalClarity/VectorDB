@@ -120,6 +120,8 @@ class UploadResponse(BaseModel):
     """Response model for successful upload"""
     document_id: str
     gcs_url: str
+    public_url: Optional[str] = None
+    requires_signed_url: bool = False
     message: str = "Document uploaded successfully"
 
 

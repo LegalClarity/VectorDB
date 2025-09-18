@@ -110,13 +110,26 @@ class GCSService:
 
             logger.info(f"File uploaded successfully: {object_path}")
 
+            # Generate public URL for the uploaded file
+            # For private buckets, we need to either make the file public or use signed URLs
+            public_url = None
+            try:
+                # Try to make the blob publicly accessible (if bucket allows it)
+                blob.make_public()
+                public_url = blob.public_url
+            except Exception as e:
+                logger.warning(f"Could not make blob public: {e}. File will require signed URL access.")
+                # If we can't make it public, we'll use signed URLs for access
+                public_url = f"https://storage.googleapis.com/{settings.user_doc_bucket}/{object_path}"
+
             return {
                 'success': True,
                 'object_path': object_path,
                 'file_hash': file_hash,
                 'file_size': file_size,
                 'gcs_url': f"gs://{settings.user_doc_bucket}/{object_path}",
-                'public_url': blob.public_url if blob.public_url else None
+                'public_url': public_url,
+                'requires_signed_url': public_url and 'storage.googleapis.com' in public_url
             }
 
         except GoogleAPIError as e:
