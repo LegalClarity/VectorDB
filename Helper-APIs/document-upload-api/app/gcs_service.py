@@ -99,11 +99,10 @@ class GCSService:
                 'file_hash': file_hash
             }
 
-            # Upload file with content type
+            # Upload file with content type (no ACL for uniform bucket-level access)
             blob.upload_from_file(
                 file_obj,
-                content_type=content_type,
-                predefined_acl='private'  # Private access by default
+                content_type=content_type
             )
 
             # Get file size

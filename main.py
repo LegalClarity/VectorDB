@@ -24,10 +24,6 @@ sys.path.insert(0, helper_apis_path)
 app_path = os.path.join(helper_apis_path, 'document-upload-api', 'app')
 sys.path.insert(0, app_path)
 
-# Add the document analyzer API path
-analyzer_app_path = os.path.join(helper_apis_path, 'document-analyzer-api', 'app')
-sys.path.insert(0, analyzer_app_path)
-
 # Now we can import the modules normally
 from config import settings
 from database import db_manager
@@ -36,8 +32,20 @@ from routers.documents import router as documents_router
 
 # Import document analyzer components
 try:
-    from app.config import settings as analyzer_settings
-    from app.routers.analyzer import router as analyzer_router
+    # Import analyzer config with specific path to avoid conflicts
+    analyzer_config_path = os.path.join(helper_apis_path, 'document-analyzer-api', 'app', 'config.py')
+    spec = importlib.util.spec_from_file_location("analyzer_config", analyzer_config_path)
+    analyzer_config_module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(analyzer_config_module)
+    analyzer_settings = analyzer_config_module.settings
+
+    # Import analyzer router with specific path
+    analyzer_router_path = os.path.join(helper_apis_path, 'document-analyzer-api', 'app', 'routers', 'analyzer.py')
+    spec = importlib.util.spec_from_file_location("analyzer_router", analyzer_router_path)
+    analyzer_router_module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(analyzer_router_module)
+    analyzer_router = analyzer_router_module.router
+
     ANALYZER_AVAILABLE = True
 except ImportError as e:
     print(f"Document analyzer not available: {e}")

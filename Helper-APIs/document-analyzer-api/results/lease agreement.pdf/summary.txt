@@ -1,0 +1,17 @@
+Document Analysis Summary
+========================
+
+Document: lease agreement.pdf
+Type: rental
+Analysis Date: 2025-09-18T18:14:02.796453
+Status: completed
+
+Summary:
+This is a rental document with 2 key entities identified through mock analysis.
+
+Key Terms:
+- Mock term 1
+- Mock term 2
+
+Risk Level: medium
+Compliance Score: 75.0
