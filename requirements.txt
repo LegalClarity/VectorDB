@@ -39,6 +39,6 @@ typing-extensions==4.8.0
 
 # AI and Legal Document Processing
 google-generativeai
-langextract
+langextract=0.1.0
 PyPDF2
 json-repair
