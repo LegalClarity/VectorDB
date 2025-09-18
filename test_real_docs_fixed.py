@@ -6,7 +6,7 @@ This should work since we verified the minimal setup is functional
 import os
 from pathlib import Path
 from dotenv import load_dotenv
-from legal_document_extractor import LegalDocumentExtractor
+from improved_legal_extractor import ImprovedLegalDocumentExtractor as LegalDocumentExtractor
 
 # Load environment variables
 load_dotenv()

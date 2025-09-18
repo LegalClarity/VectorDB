@@ -7,7 +7,11 @@ import os
 import json
 from pathlib import Path
 from dotenv import load_dotenv
-from legal_document_extractor import LegalDocumentExtractor
+from improved_legal_extractor import ImprovedLegalDocumentExtractor as LegalDocumentExtractor
+import sys
+import os
+sys.path.append(os.path.join(os.path.dirname(__file__), 'Helper-APIs', 'document-analyzer-api'))
+
 from legal_document_schemas import DocumentType, ClauseType, RelationshipType
 
 # Load environment variables from root .env file
