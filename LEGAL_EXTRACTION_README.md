@@ -61,7 +61,7 @@ This system extracts structured information from three types of Indian legal doc
 ### Basic Usage
 
 ```python
-from legal_document_extractor import LegalDocumentExtractor
+from improved_legal_extractor import ImprovedLegalDocumentExtractor as LegalDocumentExtractor
 
 # Initialize extractor
 extractor = LegalDocumentExtractor()
@@ -151,7 +151,7 @@ pytest test_legal_extraction.py::TestLegalDocumentExtraction::test_rental_agreem
 
 ### Generate HTML Report
 ```python
-from legal_document_extractor import LegalDocumentExtractor
+from improved_legal_extractor import ImprovedLegalDocumentExtractor as LegalDocumentExtractor
 
 extractor = LegalDocumentExtractor()
 result = extractor.extract_clauses_and_relationships(document_text, "rental")

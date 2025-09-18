@@ -6,7 +6,7 @@ Compare our implementation with working basic LangExtract
 import os
 from dotenv import load_dotenv
 import langextract as lx
-from legal_document_extractor import LegalDocumentExtractor
+from improved_legal_extractor import ImprovedLegalDocumentExtractor as LegalDocumentExtractor
 
 # Load environment variables
 load_dotenv()
@@ -110,7 +110,7 @@ def test_minimal_our_implementation():
     print("=" * 50)
 
     # Create minimal extractor with simpler config
-    from legal_document_extractor import LegalDocumentExtractor
+    from improved_legal_extractor import ImprovedLegalDocumentExtractor as LegalDocumentExtractor
 
     # Temporarily modify the config to be minimal
     original_configs = LegalDocumentExtractor._initialize_extraction_configs
