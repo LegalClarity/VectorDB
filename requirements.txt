@@ -36,3 +36,9 @@ passlib[bcrypt]==1.7.4
 # Additional utilities
 pathlib2==2.3.7.post1
 typing-extensions==4.8.0
+
+# AI and Legal Document Processing
+google-generativeai
+langextract
+PyPDF2
+json-repair
