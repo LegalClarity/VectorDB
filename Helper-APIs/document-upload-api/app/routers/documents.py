@@ -15,7 +15,7 @@ from database import document_repo, user_repo
 from gcs_service import gcs_service
 from validation import document_validator, ValidationResult
 
-router = APIRouter()
+router = APIRouter(tags=["documents"])
 logger = logging.getLogger(__name__)
 
 

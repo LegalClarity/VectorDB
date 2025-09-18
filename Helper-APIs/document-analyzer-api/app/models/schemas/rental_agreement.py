@@ -236,12 +236,12 @@ class RentalAgreementSchema(BaseModel):
     # Registration and Legal Details
     registration_details: Optional[RegistrationDetails] = Field(None, description="Registration information")
 
-    class Config:
-        """Pydantic configuration"""
-        json_encoders = {
+    model_config = {
+        "json_encoders": {
             Decimal: lambda v: float(v),
             date: lambda v: v.isoformat()
         }
+    }
         schema_extra = {
             "example": {
                 "document_metadata": {

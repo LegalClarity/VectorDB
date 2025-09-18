@@ -298,12 +298,12 @@ class TermsOfServiceSchema(BaseModel):
     legal_framework: LegalFramework = Field(..., description="Legal framework and jurisdiction")
     alternative_dispute_resolution: AlternativeDisputeResolution = Field(..., description="Alternative dispute resolution")
 
-    class Config:
-        """Pydantic configuration"""
-        json_encoders = {
+    model_config = {
+        "json_encoders": {
             Decimal: lambda v: float(v),
             date: lambda v: v.isoformat()
         }
+    }
         schema_extra = {
             "example": {
                 "tos_metadata": {

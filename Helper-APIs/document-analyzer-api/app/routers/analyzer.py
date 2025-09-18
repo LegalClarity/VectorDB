@@ -9,14 +9,14 @@ from fastapi import APIRouter, HTTPException, Depends, BackgroundTasks, Query
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 
-from services.document_analyzer import DocumentAnalyzerService
-from services.database_service import DatabaseService
-from services.gcs_service import GCSService
-from models.schemas.processed_document import ProcessedDocumentSchema
+from ..services.document_analyzer import DocumentAnalyzerService
+from ..services.database_service import DatabaseService
+from ..services.gcs_service import GCSService
+from ..models.schemas.processed_document import ProcessedDocumentSchema
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter()
+router = APIRouter(tags=["analyzer"])
 
 
 # Request/Response Models
@@ -27,8 +27,10 @@ class AnalyzeDocumentRequest(BaseModel):
     document_type: str = Field(..., description="Type of document (rental/loan/tos)")
     user_id: str = Field(..., description="User who owns the document")
 
-    class Config:
-        schema_extra = {
+    @classmethod
+    def model_json_schema(cls, **kwargs):
+        schema = super().model_json_schema(**kwargs)
+        schema["example"] = {
             "example": {
                 "document_id": "doc_123456",
                 "document_type": "rental",
@@ -44,8 +46,10 @@ class AnalysisResponse(BaseModel):
     data: dict = Field(..., description="Analysis result data")
     meta: dict = Field(..., description="Metadata about the response")
 
-    class Config:
-        schema_extra = {
+    @classmethod
+    def model_json_schema(cls, **kwargs):
+        schema = super().model_json_schema(**kwargs)
+        schema["example"] = {
             "example": {
                 "success": True,
                 "data": {

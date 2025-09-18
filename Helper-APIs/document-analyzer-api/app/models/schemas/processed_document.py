@@ -107,12 +107,12 @@ class DocumentAnalysisResult(BaseModel):
     updated_at: datetime = Field(default_factory=datetime.utcnow, description="When analysis was last updated")
     processed_by: str = Field(..., description="Processing service identifier")
 
-    class Config:
-        """Pydantic configuration"""
-        json_encoders = {
+    model_config = {
+        "json_encoders": {
             datetime: lambda v: v.isoformat(),
             Decimal: lambda v: float(v)
         }
+    }
 
 
 class ProcessedDocumentSchema(BaseModel):
@@ -156,15 +156,17 @@ class ProcessedDocumentSchema(BaseModel):
     document_type_user_id: Optional[str] = Field(None, description="Compound index field")
     processing_status_date: Optional[str] = Field(None, description="Compound index for status queries")
 
-    class Config:
-        """Pydantic configuration"""
-        allow_population_by_field_name = True
-        json_encoders = {
+    model_config = {
+        "populate_by_name": True,
+        "json_encoders": {
             datetime: lambda v: v.isoformat(),
             Decimal: lambda v: float(v)
         }
+    }
+
+    class Config:
+        """Pydantic configuration for backwards compatibility"""
         schema_extra = {
-            "example": {
                 "_id": "507f1f77bcf86cd799439011",
                 "document_id": "doc_123456",
                 "document_type": "rental",
