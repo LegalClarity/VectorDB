@@ -1,0 +1,38 @@
+# Core dependencies
+fastapi
+uvicorn[standard]
+pydantic
+pydantic-settings
+motor
+pymongo
+
+# Google Cloud and AI
+google-cloud-storage
+google-generativeai
+langextract
+
+# Document processing
+PyPDF2
+python-docx
+pytesseract
+Pillow
+
+# Qdrant (optional, for future vector search)
+qdrant-client
+
+# Utilities
+python-multipart
+python-jose[cryptography]
+passlib[bcrypt]
+aiofiles
+
+# Development dependencies
+pytest
+pytest-asyncio
+httpx
+black
+isort
+flake8
+
+# Optional: Sentence transformers for vector embeddings
+sentence-transformers
