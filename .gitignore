@@ -93,3 +93,11 @@ $RECYCLE.BIN/
 *.pot
 *.mo
 service-account.json
+LEGAL_CLARITY_ACHIEVEMENTS_AND_IMPROVEMENTS.md
+.gitignore
+Guide for Improvement.md
+LEGAL_CLARITY_ACHIEVEMENTS_AND_IMPROVEMENTS.md
+LEGAL_CLARITY_ACHIEVEMENTS_AND_IMPROVEMENTS.md
+test_example_docs_improvements.py
+test_real_langextract_integration.py
+test_legal_clarity_fixes.py
