@@ -24,11 +24,24 @@ sys.path.insert(0, helper_apis_path)
 app_path = os.path.join(helper_apis_path, 'document-upload-api', 'app')
 sys.path.insert(0, app_path)
 
+# Add the document analyzer API path
+analyzer_app_path = os.path.join(helper_apis_path, 'document-analyzer-api', 'app')
+sys.path.insert(0, analyzer_app_path)
+
 # Now we can import the modules normally
 from config import settings
 from database import db_manager
 from gcs_service import gcs_service
 from routers.documents import router as documents_router
+
+# Import document analyzer components
+try:
+    from app.config import settings as analyzer_settings
+    from app.routers.analyzer import router as analyzer_router
+    ANALYZER_AVAILABLE = True
+except ImportError as e:
+    print(f"Document analyzer not available: {e}")
+    ANALYZER_AVAILABLE = False
 
 # Configure logging
 logging.basicConfig(
@@ -177,6 +190,14 @@ async def health_check():
         # Test GCS connectivity (basic check)
         gcs_status = "healthy"
 
+        apis = {
+            "document_upload": "available",
+            "vectordb": "available"
+        }
+
+        if ANALYZER_AVAILABLE:
+            apis["document_analyzer"] = "available"
+
         return {
             "status": "healthy",
             "timestamp": time.time(),
@@ -184,10 +205,7 @@ async def health_check():
                 "mongodb": mongo_status,
                 "gcs": gcs_status
             },
-            "apis": {
-                "document_upload": "available",
-                "vectordb": "available"
-            }
+            "apis": apis
         }
 
     except Exception as e:
@@ -206,13 +224,18 @@ async def health_check():
 @app.get("/")
 async def root():
     """Root endpoint with API information"""
+    apis = {
+        "documents": "/docs (Document Upload API)",
+        "vectordb": "VectorDB Main functionality"
+    }
+
+    if ANALYZER_AVAILABLE:
+        apis["analyzer"] = "/analyzer/docs (Document Analyzer API)"
+
     return {
-        "message": "Consolidated API - Document Upload & VectorDB",
+        "message": "Consolidated API - Document Upload, Analyzer & VectorDB",
         "version": "1.0.0",
-        "apis": {
-            "documents": "/docs (Document Upload API)",
-            "vectordb": "VectorDB Main functionality"
-        },
+        "apis": apis,
         "health": "/health",
         "docs": "/docs"
     }
@@ -224,6 +247,14 @@ app.include_router(
     prefix="/documents",
     tags=["Document Upload API"]
 )
+
+# Include document analyzer router if available
+if ANALYZER_AVAILABLE:
+    app.include_router(
+        analyzer_router,
+        prefix="/analyzer",
+        tags=["Document Analyzer API"]
+    )
 
 
 # Placeholder for future VectorDB integration
