@@ -108,6 +108,8 @@ async def upload_document(
         return UploadResponse(
             document_id=document_id,
             gcs_url=upload_result['gcs_url'],
+            public_url=upload_result.get('public_url'),
+            requires_signed_url=upload_result.get('requires_signed_url', False),
             message="Document uploaded successfully"
         )
 
@@ -213,7 +215,9 @@ async def upload_multiple_documents(
                     "filename": file.filename,
                     "success": True,
                     "document_id": document_id,
-                    "gcs_url": upload_result['gcs_url']
+                    "gcs_url": upload_result['gcs_url'],
+                    "public_url": upload_result.get('public_url'),
+                    "requires_signed_url": upload_result.get('requires_signed_url', False)
                 })
 
             except Exception as e:

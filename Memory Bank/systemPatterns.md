@@ -138,9 +138,46 @@ async def process_multiple_documents(document_ids: List[str]):
     return results
 ```
 
-### Error Handling Patterns
+### AI Integration Patterns
 
-#### Custom Exception Hierarchy
+#### LangExtract Integration Pattern
+```python
+# ✅ Real LangExtract Integration Pattern (No Mocks)
+class LegalDocumentExtractor:
+    def extract_clauses_and_relationships(self, document_text: str, document_type: str):
+        """Extract clauses using real LangExtract with Gemini API"""
+
+        # Initialize extraction configuration
+        config = self.extraction_configs[document_type]
+
+        # Real API call with comprehensive parameters
+        result = lx.extract(
+            text_or_documents=document_text,
+            prompt_description=config["prompts"],
+            examples=config["examples"],
+            model_id=config["model_id"],  # gemini-2.5-flash for optimal performance
+            api_key=self.gemini_api_key,  # Real API key
+            max_char_buffer=config["max_char_buffer"],
+            extraction_passes=config["extraction_passes"],
+            max_workers=config["max_workers"]
+        )
+
+        # Process real results into structured data
+        clauses, relationships = self._process_extraction_results(result, document_type)
+
+        return ExtractionResult(
+            document_id=f"doc_{int(time.time())}",
+            document_type=DocumentType.RENTAL_AGREEMENT,
+            extracted_clauses=clauses,
+            clause_relationships=relationships,
+            confidence_score=self._calculate_confidence_score(clauses),
+            processing_time_seconds=time.time() - start_time
+        )
+```
+
+#### Error Handling Patterns
+
+##### Custom Exception Hierarchy
 ```python
 class LegalClarityError(Exception):
     """Base exception for Legal Clarity application"""
@@ -156,6 +193,10 @@ class ValidationError(LegalClarityError):
 
 class ExternalServiceError(LegalClarityError):
     """Raised when external service calls fail"""
+    pass
+
+class LangExtractError(LegalClarityError):
+    """Raised when LangExtract API calls fail"""
     pass
 ```
 
