@@ -98,14 +98,35 @@ async def lifespan(app: FastAPI):
     logger.info("Consolidated API shutdown complete")
 
 
+# API Tags for better organization
+tags_metadata = [
+    {
+        "name": "health",
+        "description": "Health check and system status endpoints"
+    },
+    {
+        "name": "documents",
+        "description": "Document upload, management and retrieval operations"
+    },
+    {
+        "name": "analyzer",
+        "description": "Document analysis and processing operations"
+    },
+    {
+        "name": "vectordb",
+        "description": "Vector database operations and RAG functionality"
+    }
+]
+
 # Create FastAPI application
 app = FastAPI(
     title="Consolidated API - Document Upload & VectorDB",
-    description="Unified API with document upload functionality and vector database operations",
+    description="Unified API with document upload functionality, analysis and vector database operations",
     version="1.0.0",
     lifespan=lifespan,
     docs_url="/docs",
-    redoc_url="/redoc"
+    redoc_url="/redoc",
+    openapi_tags=tags_metadata
 )
 
 # Add CORS middleware
@@ -188,7 +209,7 @@ async def general_exception_handler(request: Request, exc: Exception):
 
 
 # Health check endpoint
-@app.get("/health")
+@app.get("/health", tags=["health"])
 async def health_check():
     """Health check endpoint"""
     try:
@@ -229,7 +250,7 @@ async def health_check():
 
 
 # Root endpoint
-@app.get("/")
+@app.get("/", tags=["health"])
 async def root():
     """Root endpoint with API information"""
     apis = {
@@ -253,7 +274,7 @@ async def root():
 app.include_router(
     documents_router,
     prefix="/documents",
-    tags=["Document Upload API"]
+    tags=["documents"]
 )
 
 # Include document analyzer router if available
@@ -261,12 +282,12 @@ if ANALYZER_AVAILABLE:
     app.include_router(
         analyzer_router,
         prefix="/analyzer",
-        tags=["Document Analyzer API"]
+        tags=["analyzer"]
     )
 
 
 # Placeholder for future VectorDB integration
-@app.get("/vectordb/status")
+@app.get("/vectordb/status", tags=["vectordb"])
 async def vectordb_status():
     """VectorDB status endpoint (placeholder)"""
     return {

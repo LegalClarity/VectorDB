@@ -50,8 +50,9 @@ class DocumentResponse(BaseModel):
     timestamps: TimestampsSchema
     status: StatusSchema
 
-    class Config:
-        from_attributes = True
+    model_config = {
+        "from_attributes": True
+    }
 
 
 class UserResponse(BaseModel):
@@ -64,8 +65,9 @@ class UserResponse(BaseModel):
     created_at: datetime
     last_active: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = {
+        "from_attributes": True
+    }
 
 
 class UploadRequest(BaseModel):

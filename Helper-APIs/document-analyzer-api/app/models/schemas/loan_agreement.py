@@ -281,12 +281,12 @@ class LoanAgreementSchema(BaseModel):
     acceleration_clause: Optional[str] = Field(None, description="Acceleration clause details")
     recovery_mechanisms: RecoveryMechanisms = Field(..., description="Recovery and enforcement mechanisms")
 
-    class Config:
-        """Pydantic configuration"""
-        json_encoders = {
+    model_config = {
+        "json_encoders": {
             Decimal: lambda v: float(v),
             date: lambda v: v.isoformat()
         }
+    }
         schema_extra = {
             "example": {
                 "loan_metadata": {
