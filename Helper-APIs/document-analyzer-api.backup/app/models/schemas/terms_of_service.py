@@ -304,3 +304,116 @@ class TermsOfServiceSchema(BaseModel):
             date: lambda v: v.isoformat()
         }
     }
+        schema_extra = {
+            "example": {
+                "tos_metadata": {
+                    "document_type": "terms_of_service",
+                    "title": "Terms of Service - TechCorp Platform"
+                },
+                "service_provider": {
+                    "company_name": "TechCorp Services Private Limited",
+                    "registered_address": {
+                        "street_address": "123 Business Park, Whitefield",
+                        "city": "Bangalore",
+                        "state": "Karnataka",
+                        "pincode": "560066"
+                    },
+                    "cin_number": "U72900KA2020PTC123456",
+                    "gstin": "29ABCDE1234F1Z5"
+                },
+                "document_details": {
+                    "version_number": "2.1",
+                    "effective_date": "2024-01-01",
+                    "last_updated": "2024-01-01",
+                    "applicable_jurisdiction": "india",
+                    "governing_state_laws": "Karnataka"
+                },
+                "platform_description": {
+                    "service_category": "saas",
+                    "core_functionality": "Cloud-based project management platform",
+                    "target_user_base": "b2b",
+                    "geographic_availability": ["India", "Singapore", "UAE"],
+                    "minimum_age_requirement": 18
+                },
+                "user_eligibility": {
+                    "citizenship_requirements": "indian_residents",
+                    "prohibited_users": ["competitors", "minors"]
+                },
+                "account_management": {
+                    "account_types": ["free", "premium", "enterprise"],
+                    "suspension_grounds": ["policy_violation", "non_payment"]
+                },
+                "user_rights": {
+                    "service_access_rights": "24/7 access to platform features",
+                    "data_portability": True,
+                    "grievance_redressal": "Email support within 48 hours"
+                },
+                "acceptable_use_policy": {
+                    "permitted_activities": ["business_collaboration", "project_management"],
+                    "prohibited_activities": ["illegal_content", "spam_activities", "copyright_infringement"]
+                },
+                "compliance_obligations": {
+                    "indian_law_compliance": True,
+                    "tax_obligations": {"gst_compliance": True},
+                    "data_localization": True
+                },
+                "pricing_structure": {
+                    "pricing_model": "subscription",
+                    "base_charges": 999.0,
+                    "billing_cycle": "monthly",
+                    "currency": "INR"
+                },
+                "payment_processing": {
+                    "accepted_payment_methods": ["credit_card", "net_banking", "upi"],
+                    "payment_gateway_partners": ["Razorpay", "PayU"],
+                    "payment_security_standards": "pci_dss"
+                },
+                "refund_cancellation": {
+                    "cooling_off_period": 7,
+                    "pro_rata_adjustments": True
+                },
+                "taxation": {
+                    "gst_applicability": True,
+                    "tax_invoice_generation": True
+                },
+                "service_availability": {
+                    "uptime_commitment": 99.9,
+                    "scheduled_maintenance": "Sunday 2-4 AM IST"
+                },
+                "content_moderation": {
+                    "automated_filtering": True,
+                    "human_review_process": "For reported content"
+                },
+                "limitation_of_liability": {
+                    "liability_cap": "revenue_based",
+                    "excluded_damages": ["consequential_damages", "lost_profits"]
+                },
+                "data_collection": {
+                    "personal_data_categories": ["name", "email", "company_details"],
+                    "legal_basis": "consent",
+                    "collection_methods": ["user_input", "cookies"]
+                },
+                "data_processing": {
+                    "processing_purposes": ["service_provision", "analytics", "communication"],
+                    "retention_periods": "Account active + 2 years"
+                },
+                "user_controls": {
+                    "access_rights": True,
+                    "deletion_rights": True,
+                    "consent_withdrawal": True
+                },
+                "grievance_mechanism": {
+                    "response_timeline": 3,
+                    "escalation_matrix": "L1 -> L2 -> L3 support"
+                },
+                "legal_framework": {
+                    "governing_law": "indian_law",
+                    "jurisdiction": "Bangalore Civil Court",
+                    "arbitration_clause": {
+                        "arbitration_mandatory": True,
+                        "arbitration_seat": "Bangalore",
+                        "arbitration_rules": "Indian Arbitration Act"
+                    }
+                }
+            }
+        }

@@ -287,3 +287,93 @@ class LoanAgreementSchema(BaseModel):
             date: lambda v: v.isoformat()
         }
     }
+        schema_extra = {
+            "example": {
+                "loan_metadata": {
+                    "document_type": "loan_agreement",
+                    "title": "Home Loan Agreement"
+                },
+                "loan_agreement_number": "HL/2024/001234",
+                "loan_type": "home",
+                "lending_institution": {
+                    "name": "HDFC Bank Limited",
+                    "type": "bank",
+                    "license_number": "RBI License No. XYZ"
+                },
+                "agreement_date": "2024-01-15",
+                "execution_location": "Mumbai, Maharashtra",
+                "applicable_rbi_guidelines": "RBI Master Directions 2023",
+                "borrower_details": {
+                    "name": "Amit Kumar Singh",
+                    "father_name": "Rajesh Kumar Singh",
+                    "pan_number": "ABCDE1234F",
+                    "annual_income": 1200000.0,
+                    "occupation": "Software Engineer",
+                    "credit_score": 750
+                },
+                "lender_details": {
+                    "institution_name": "HDFC Bank Limited",
+                    "institution_type": "bank",
+                    "registered_office": {
+                        "street_address": "HDFC Bank House, Senapati Bapat Marg",
+                        "city": "Mumbai",
+                        "state": "Maharashtra",
+                        "pincode": "400013"
+                    }
+                },
+                "principal_details": {
+                    "sanctioned_amount": 5000000.0,
+                    "loan_purpose": "Purchase of residential property"
+                },
+                "interest_structure": {
+                    "interest_rate_type": "floating",
+                    "base_rate": 6.5,
+                    "spread_margin": 0.5,
+                    "current_rate": 7.0,
+                    "benchmark": "repo_rate",
+                    "compounding_frequency": "monthly"
+                },
+                "tenure_details": {
+                    "loan_tenure_months": 240,
+                    "prepayment_allowed": True
+                },
+                "repayment_structure": {
+                    "repayment_method": "emi",
+                    "emi_amount": 33245.0,
+                    "repayment_frequency": "monthly",
+                    "repayment_start_date": "2024-03-01",
+                    "repayment_mode": "ecs"
+                },
+                "penal_charges": {
+                    "overdue_interest_rate": 2.0,
+                    "bounce_charges": 500.0
+                },
+                "primary_security": {
+                    "security_type": "mortgage",
+                    "asset_description": {
+                        "property_address": "A-101, Sunshine Apartments, Andheri West, Mumbai",
+                        "property_value": 7000000.0
+                    },
+                    "loan_to_value_ratio": 71.4
+                },
+                "borrower_obligations": {
+                    "debt_service_coverage_ratio": 1.5,
+                    "debt_equity_ratio_maximum": 4.0
+                },
+                "reporting_requirements": {
+                    "financial_statements_frequency": "annually",
+                    "audit_requirements": True
+                },
+                "events_of_default": {
+                    "non_payment_of_dues": True,
+                    "breach_of_covenants": True,
+                    "cross_default": True,
+                    "insolvency_proceedings": True
+                },
+                "recovery_mechanisms": {
+                    "sarfaesi_applicable": True,
+                    "jurisdiction": "Mumbai",
+                    "arbitration_clause": False
+                }
+            }
+        }

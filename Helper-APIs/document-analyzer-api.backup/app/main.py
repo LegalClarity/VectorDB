@@ -14,7 +14,6 @@ from fastapi.responses import JSONResponse
 
 from .config import settings
 from .routers.analyzer import router as analyzer_router
-from .routers.extractor import router as extractor_router
 
 # Configure logging
 logging.basicConfig(
@@ -163,12 +162,6 @@ app.include_router(
     tags=["Document Analyzer API"]
 )
 
-app.include_router(
-    extractor_router,
-    prefix="/api/extractor",
-    tags=["Legal Document Extraction"]
-)
-
 
 # Root endpoint
 @app.get("/")
@@ -183,10 +176,7 @@ async def root():
             "results": "/api/analyzer/results/{document_id} (GET)",
             "documents": "/api/analyzer/documents (GET)",
             "stats": "/api/analyzer/stats/{user_id} (GET)",
-            "health": "/api/analyzer/health (GET)",
-            "extract": "/api/extractor/extract (POST)",
-            "structured": "/api/extractor/structured (POST)",
-            "extractor_health": "/api/extractor/health (GET)"
+            "health": "/api/analyzer/health (GET)"
         },
         "docs": "/docs",
         "health": "/health"
@@ -237,10 +227,7 @@ async def service_info():
             "Terms of Service analysis",
             "Risk assessment",
             "Compliance checking",
-            "Financial analysis",
-            "Legal clause extraction",
-            "Document structuring",
-            "Relationship analysis"
+            "Financial analysis"
         ],
         "technologies": [
             "LangExtract",
