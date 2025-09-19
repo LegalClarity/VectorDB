@@ -1,39 +1,34 @@
 """
-Document Analyzer API Router
+Standalone Document Analyzer API Router
 Endpoints for document analysis and processing
 """
 
 import logging
+import os
+import sys
 from typing import Optional, List
 from fastapi import APIRouter, HTTPException, Depends, BackgroundTasks, Query
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 
-import sys
-import os
-# Add current directory to path for absolute imports
+# Add paths for imports
 current_dir = os.path.dirname(os.path.abspath(__file__))
-parent_dir = os.path.dirname(current_dir)
-if parent_dir not in sys.path:
-    sys.path.insert(0, parent_dir)
+app_dir = os.path.join(current_dir, 'app')
+if app_dir not in sys.path:
+    sys.path.insert(0, app_dir)
+if current_dir not in sys.path:
+    sys.path.insert(0, current_dir)
 
-from services.document_analyzer import DocumentAnalyzerService
-from services.database_service import DatabaseService
-from services.gcs_service import GCSService
-from models.schemas.processed_document import ProcessedDocumentSchema
-
-# Import document upload models for integration
 try:
-    import sys
-    import os
-    # Add document upload API to path for importing models
-    upload_api_path = os.path.join(os.path.dirname(__file__), '..', '..', '..', 'document-upload-api', 'app')
-    if upload_api_path not in sys.path:
-        sys.path.insert(0, upload_api_path)
-    from models import Document
-    DOCUMENT_UPLOAD_MODELS_AVAILABLE = True
-except ImportError:
-    DOCUMENT_UPLOAD_MODELS_AVAILABLE = False
+    from app.services.document_analyzer import DocumentAnalyzerService
+    from app.services.database_service import DatabaseService
+    from app.services.gcs_service import GCSService
+    from app.models.schemas.processed_document import ProcessedDocumentSchema
+    from app.config import settings
+    SERVICES_AVAILABLE = True
+except ImportError as e:
+    logging.warning(f"Services not available: {e}")
+    SERVICES_AVAILABLE = False
 
 logger = logging.getLogger(__name__)
 
@@ -97,9 +92,9 @@ class DocumentListResponse(BaseModel):
 # Dependency injection functions
 async def get_analyzer_service() -> DocumentAnalyzerService:
     """Get document analyzer service instance"""
-    # This would typically come from a dependency injection container
-    # For now, we'll create it here (in production, use proper DI)
-    from config import settings
+    if not SERVICES_AVAILABLE:
+        raise HTTPException(status_code=503, detail="Analysis services not available")
+
     return DocumentAnalyzerService(
         gemini_api_key=settings.GEMINI_API_KEY,
         gemini_model=settings.GEMINI_MODEL
@@ -108,7 +103,9 @@ async def get_analyzer_service() -> DocumentAnalyzerService:
 
 async def get_database_service() -> DatabaseService:
     """Get database service instance"""
-    from config import settings
+    if not SERVICES_AVAILABLE:
+        raise HTTPException(status_code=503, detail="Database services not available")
+
     db_service = DatabaseService(
         connection_string=settings.MONGO_URI,
         database_name=settings.MONGO_DB,
@@ -120,7 +117,9 @@ async def get_database_service() -> DatabaseService:
 
 async def get_gcs_service() -> GCSService:
     """Get GCS service instance"""
-    from config import settings
+    if not SERVICES_AVAILABLE:
+        raise HTTPException(status_code=503, detail="Storage services not available")
+
     return GCSService(
         bucket_name=settings.USER_DOC_BUCKET,
         credentials_path=settings.GOOGLE_CREDENTIALS_PATH
@@ -175,7 +174,7 @@ async def analyze_document(
         document_text = await gcs_service.get_document_text(gcs_path)
 
         # If document type not provided, try to get from document metadata
-        if not hasattr(request, 'document_type') or not request.document_type:
+        if not request.document_type:
             request.document_type = document_info.get('document_metadata', {}).get('document_type', 'rental')
 
         if not document_text or len(document_text.strip()) < 100:
@@ -287,153 +286,12 @@ async def get_analysis_results(
         )
 
 
-@router.get("/documents", response_model=DocumentListResponse)
-async def list_analyzed_documents(
-    user_id: str = Query(..., description="User ID"),
-    document_type: Optional[str] = Query(None, description="Filter by document type"),
-    status: Optional[str] = Query(None, description="Filter by processing status"),
-    skip: int = Query(0, ge=0, description="Number of documents to skip"),
-    limit: int = Query(20, ge=1, le=100, description="Maximum number of documents to return"),
-    db_service: DatabaseService = Depends(get_database_service)
-):
-    """
-    List analyzed documents for a user
-
-    Returns a paginated list of documents that have been analyzed.
-    """
-    try:
-        logger.info(f"Listing analyzed documents for user: {user_id}")
-
-        # Get documents
-        documents = await db_service.get_user_documents(
-            user_id=user_id,
-            document_type=document_type,
-            status=status,
-            skip=skip,
-            limit=limit
-        )
-
-        # Convert to dict format
-        document_list = []
-        for doc in documents:
-            document_list.append({
-                "document_id": doc.document_id,
-                "document_type": doc.document_type,
-                "status": doc.status,
-                "created_at": doc.created_at.isoformat(),
-                "processing_duration_seconds": doc.processing_duration_seconds,
-                "file_name": doc.file_name,
-                "error_message": doc.error_message if doc.status == "failed" else None
-            })
-
-        return DocumentListResponse(
-            success=True,
-            data={
-                "documents": document_list,
-                "total_count": len(document_list),
-                "has_more": len(document_list) == limit
-            },
-            meta={
-                "timestamp": "2025-09-18T10:30:00Z",
-                "pagination": {
-                    "skip": skip,
-                    "limit": limit
-                }
-            }
-        )
-
-    except Exception as e:
-        logger.error(f"Failed to list documents: {e}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to list documents: {str(e)}"
-        )
-
-
-@router.get("/stats/{user_id}")
-async def get_user_stats(
-    user_id: str,
-    db_service: DatabaseService = Depends(get_database_service)
-):
-    """
-    Get analysis statistics for a user
-
-    Returns statistics about document processing and analysis.
-    """
-    try:
-        logger.info(f"Getting stats for user: {user_id}")
-
-        stats = await db_service.get_processing_stats(user_id)
-
-        return JSONResponse(
-            content={
-                "success": True,
-                "data": stats,
-                "meta": {
-                    "timestamp": "2025-09-18T10:30:00Z"
-                }
-            }
-        )
-
-    except Exception as e:
-        logger.error(f"Failed to get user stats: {e}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to get user stats: {str(e)}"
-        )
-
-
-@router.delete("/results/{document_id}")
-async def delete_analysis_results(
-    document_id: str,
-    user_id: str = Query(..., description="User ID for security"),
-    db_service: DatabaseService = Depends(get_database_service)
-):
-    """
-    Delete analysis results for a document
-
-    Removes the analysis results from the database.
-    """
-    try:
-        logger.info(f"Deleting analysis results for document: {document_id}")
-
-        deleted = await db_service.delete_analysis_result(document_id, user_id)
-
-        if not deleted:
-            raise HTTPException(
-                status_code=404,
-                detail="Analysis results not found"
-            )
-
-        return JSONResponse(
-            content={
-                "success": True,
-                "data": {
-                    "document_id": document_id,
-                    "message": "Analysis results deleted successfully"
-                },
-                "meta": {
-                    "timestamp": "2025-09-18T10:30:00Z"
-                }
-            }
-        )
-
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Failed to delete analysis results: {e}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to delete analysis results: {str(e)}"
-        )
-
-
 @router.get("/health")
 async def analyzer_health():
     """Health check endpoint for the analyzer service"""
     return {
         "service": "document_analyzer",
-        "status": "healthy",
+        "status": "healthy" if SERVICES_AVAILABLE else "services_unavailable",
         "timestamp": "2025-09-18T10:30:00Z",
         "version": "1.0.0"
     }
@@ -483,15 +341,13 @@ async def process_document_analysis(
         )
 
         # Store minimal error result
-        error_result = analysis_result = type('ErrorResult', (), {
-            'document_id': document_id,
-            'document_type': document_type,
-            'user_id': user_id,
-            'processing_status': 'failed',
-            'processing_errors': [str(e)]
-        })()
-
         try:
+            error_result = type('ErrorResult', (), {
+                'document_id': document_id,
+                'document_type': document_type,
+                'user_id': user_id,
+                'processing_status': 'failed'
+            })()
             await db_service.store_analysis_result(error_result)
         except Exception as store_error:
             logger.error(f"Failed to store error result: {store_error}")

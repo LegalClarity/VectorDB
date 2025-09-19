@@ -281,12 +281,13 @@ Legal Clarity API v1.0 ✅ ACTIVE on Port 8004
 │   ├── DELETE /documents/{document_id}       # Delete document
 │   └── GET    /documents/{document_id}/url   # Signed download URL
 ├── 🔍 Analyzer (tag: analyzer)
-│   ├── POST   /analyzer/analyze              # Analyze document with AI ✅ IMPLEMENTED
-│   ├── GET    /analyzer/results/{doc_id}     # Get analysis results ✅ IMPLEMENTED
-│   ├── GET    /analyzer/documents            # List analyzed documents ✅ IMPLEMENTED
-│   ├── GET    /analyzer/stats/{user_id}      # Get user statistics ✅ IMPLEMENTED
-│   ├── DELETE /analyzer/results/{doc_id}     # Delete analysis results ✅ IMPLEMENTED
-│   └── GET    /analyzer/health               # Analyzer health check ✅ IMPLEMENTED
+│   ├── POST   /analyzer/analyze              # Analyze document with AI ❌ NOT WORKING
+│   ├── GET    /analyzer/results/{doc_id}     # Get analysis results ❌ NOT WORKING
+│   ├── GET    /analyzer/documents            # List analyzed documents ❌ NOT WORKING
+│   ├── GET    /analyzer/stats/{user_id}      # Get user statistics ❌ NOT WORKING
+│   ├── DELETE /analyzer/results/{doc_id}     # Delete analysis results ❌ NOT WORKING
+│   └── GET    /analyzer/health               # Analyzer health check ❌ NOT WORKING
+│   └── **ISSUES**: Router integration failing, mock responses only, no MongoDB storage
 ├── 🗄️ VectorDB (tag: vectordb)
 │   ├── POST   /chat/query                    # Submit query with context ✅ IMPLEMENTED
 │   ├── GET    /chat/history                  # Retrieve conversation history ✅ IMPLEMENTED

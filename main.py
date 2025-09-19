@@ -32,24 +32,25 @@ from routers.documents import router as documents_router
 
 # Import document analyzer components
 try:
-    # Import analyzer config with specific path to avoid conflicts
-    analyzer_config_path = os.path.join(helper_apis_path, 'document-analyzer-api', 'app', 'config.py')
-    spec = importlib.util.spec_from_file_location("analyzer_config", analyzer_config_path)
-    analyzer_config_module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(analyzer_config_module)
-    analyzer_settings = analyzer_config_module.settings
+    # Add analyzer directory to path
+    analyzer_dir = os.path.join(helper_apis_path, 'document-analyzer-api')
+    if analyzer_dir not in sys.path:
+        sys.path.insert(0, analyzer_dir)
 
-    # Import analyzer router with specific path
-    analyzer_router_path = os.path.join(helper_apis_path, 'document-analyzer-api', 'app', 'routers', 'analyzer.py')
-    spec = importlib.util.spec_from_file_location("analyzer_router", analyzer_router_path)
-    analyzer_router_module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(analyzer_router_module)
-    analyzer_router = analyzer_router_module.router
+    # Import the simple router
+    import importlib.util
+    simple_router_path = os.path.join(analyzer_dir, 'simple_router.py')
+    spec = importlib.util.spec_from_file_location("simple_router", simple_router_path)
+    simple_router_module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(simple_router_module)
+    analyzer_router = simple_router_module.router
 
     ANALYZER_AVAILABLE = True
+    print("✅ Document analyzer imported successfully")
 except ImportError as e:
-    print(f"Document analyzer not available: {e}")
+    print(f"❌ Document analyzer not available: {e}")
     ANALYZER_AVAILABLE = False
+    analyzer_router = None
 
 # Configure logging
 logging.basicConfig(

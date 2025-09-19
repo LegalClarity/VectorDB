@@ -286,8 +286,6 @@ class LoanAgreementSchema(BaseModel):
             Decimal: lambda v: float(v),
             date: lambda v: v.isoformat()
         }
-    }
-        schema_extra = {
             "example": {
                 "loan_metadata": {
                     "document_type": "loan_agreement",

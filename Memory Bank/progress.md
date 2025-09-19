@@ -61,12 +61,25 @@
    - ✅ Clear endpoint grouping: health, documents, analyzer, vectordb
    - ✅ Improved API documentation structure
 
-#### 🔄 In Progress Features (60% Complete)
-1. **Luna AI Assistant** - September 18, 2025 (Target)
-   - Conversational interface design
-   - Personality development
-   - Context awareness integration
-   - Multi-turn conversation handling
+#### 🔄 In Progress Features (30% Complete)
+1. **Document Analyzer Router Integration** - September 18, 2025 (CRITICAL)
+   - **Status**: ❌ Failing - Import errors preventing router loading
+   - **Problem**: `AttributeError: module has no attribute 'router'`
+   - **Impact**: Analyzer endpoints not accessible via API
+   - **Solution**: Fix import system in `main.py` and router implementation
+
+2. **Real Document Processing Integration** - September 18, 2025 (CRITICAL)
+   - **Status**: ❌ Not Working - Using mock responses only
+   - **Problem**: No actual LangExtract or Gemini API processing
+   - **Impact**: Analysis results are not real, just hardcoded responses
+   - **Solution**: Integrate `ImprovedLegalDocumentExtractor` with actual API calls
+
+3. **MongoDB Results Storage** - September 18, 2025 (CRITICAL)
+   - **Status**: ❌ Not Working - Results not persisted to database
+   - **Problem**: Analysis results not stored in `processed_documents` collection
+   - **Configuration**: `MONGO_PROCESSED_DOCS_COLLECTION="processed_documents"` ✅ Correct
+   - **Impact**: All analysis results lost, no data persistence
+   - **Solution**: Fix database service integration and storage logic
 
 2. **Memory System Implementation** - September 20, 2025 (Target)
    - LangMem-compatible architecture

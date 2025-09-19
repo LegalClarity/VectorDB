@@ -242,7 +242,6 @@ class RentalAgreementSchema(BaseModel):
             date: lambda v: v.isoformat()
         }
     }
-        schema_extra = {
             "example": {
                 "document_metadata": {
                     "document_type": "rental_agreement",

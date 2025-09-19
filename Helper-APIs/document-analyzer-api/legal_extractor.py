@@ -21,7 +21,6 @@ import langextract as lx
 from json_repair import repair_json
 import sys
 import os
-sys.path.append(os.path.join(os.path.dirname(__file__), 'Helper-APIs', 'document-analyzer-api'))
 
 from legal_document_schemas import (
     DocumentType, ClauseType, RelationshipType, LegalClause,

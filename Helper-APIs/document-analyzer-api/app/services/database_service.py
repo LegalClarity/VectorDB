@@ -158,7 +158,7 @@ class DatabaseService:
             logger.error(f"Failed to retrieve analysis result: {e}")
             raise Exception(f"Retrieval failed: {str(e)}")
 
-    async def update_analysis_status(self, document_id: str, status: str, error_message: Optional[str] = None):
+    async def update_analysis_status(self, document_id: str, status: str, error_message: Optional[str] = None, analysis_id: Optional[str] = None):
         """
         Update analysis status
 
@@ -166,6 +166,7 @@ class DatabaseService:
             document_id: The document ID
             status: New status (pending/processing/completed/failed)
             error_message: Error message if status is failed
+            analysis_id: MongoDB ObjectID of the analysis result
         """
         try:
             update_data = {
@@ -175,6 +176,9 @@ class DatabaseService:
 
             if error_message:
                 update_data["error_message"] = error_message
+
+            if analysis_id:
+                update_data["analysis_id"] = analysis_id
 
             # Update compound index field if status changed
             if status in ["completed", "failed"]:
@@ -358,6 +362,39 @@ class DatabaseService:
         except Exception as e:
             logger.error(f"Failed to delete analysis result: {e}")
             raise Exception(f"Deletion failed: {str(e)}")
+
+    async def get_document_info(self, document_id: str, user_id: str) -> Optional[Dict[str, Any]]:
+        """
+        Get document information from upload API database
+        This method queries the documents collection to get document metadata
+
+        Args:
+            document_id: The document ID
+            user_id: The user ID (for security)
+
+        Returns:
+            Dictionary with document information or None if not found
+        """
+        try:
+            # Use a different collection name for documents (from upload API)
+            documents_collection = self.database["documents"]  # Assuming documents collection exists
+
+            # Query document
+            document = await documents_collection.find_one({
+                "document_id": document_id,
+                "user_id": user_id
+            })
+
+            if document:
+                # Convert ObjectId to string and return as dict
+                document["_id"] = str(document["_id"])
+                return document
+
+            return None
+
+        except Exception as e:
+            logger.error(f"Failed to get document info: {e}")
+            raise Exception(f"Document info retrieval failed: {str(e)}")
 
     async def get_recent_analyses(self, user_id: str, limit: int = 10) -> List[ProcessedDocumentSchema]:
         """

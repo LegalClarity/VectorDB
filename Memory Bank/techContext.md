@@ -74,12 +74,18 @@ GET    /documents/{document_id}/url   # Generate signed download URL
 
 #### Document Analyzer API (Tag: analyzer)
 ```python
-POST   /analyzer/analyze              # Analyze document with AI ✅ IMPLEMENTED
-GET    /analyzer/results/{doc_id}     # Get analysis results ✅ IMPLEMENTED
-GET    /analyzer/documents            # List analyzed documents ✅ IMPLEMENTED
-GET    /analyzer/stats/{user_id}      # Get user statistics ✅ IMPLEMENTED
-DELETE /analyzer/results/{doc_id}     # Delete analysis results ✅ IMPLEMENTED
-GET    /analyzer/health               # Analyzer health check ✅ IMPLEMENTED
+POST   /analyzer/analyze              # Analyze document with AI ❌ NOT WORKING
+GET    /analyzer/results/{doc_id}     # Get analysis results ❌ NOT WORKING
+GET    /analyzer/documents            # List analyzed documents ❌ NOT WORKING
+GET    /analyzer/stats/{user_id}      # Get user statistics ❌ NOT WORKING
+DELETE /analyzer/results/{doc_id}     # Delete analysis results ❌ NOT WORKING
+GET    /analyzer/health               # Analyzer health check ❌ NOT WORKING
+
+**CRITICAL ISSUES:**
+- Router not integrated into main.py (import errors)
+- Using mock responses instead of real LangExtract processing
+- Analysis results not stored in MongoDB `processed_documents` collection
+- No actual AI-powered document analysis happening
 ```
 
 #### RAG Chatbot API (Tag: vectordb)
@@ -258,6 +264,48 @@ graph TD
 - **Features**: Automatic scaling, backup, monitoring
 - **Security**: End-to-end encryption, network isolation
 
+## Current Technical Issues
+
+### Critical Problems (Active Development)
+
+#### 1. Router Integration Failure
+- **Status**: ❌ Critical - Preventing analyzer endpoints from working
+- **Error**: `AttributeError: module has no attribute 'router'`
+- **Location**: `main.py` line 41, `Helper-APIs/document-analyzer-api/simple_router.py`
+- **Impact**: Document analyzer API endpoints not accessible
+- **Solution**: Fix import system and router implementation
+
+#### 2. Mock vs Real Processing
+- **Status**: ❌ Critical - No actual AI processing happening
+- **Problem**: Current implementation returns hardcoded mock responses
+- **Impact**: No real document analysis or clause extraction
+- **Solution**: Integrate `ImprovedLegalDocumentExtractor` with actual LangExtract API calls
+
+#### 3. MongoDB Storage Issues
+- **Status**: ❌ Critical - Analysis results not persisted
+- **Problem**: Results not stored in `processed_documents` collection
+- **Configuration**: `MONGO_PROCESSED_DOCS_COLLECTION="processed_documents"` ✅ Correct
+- **Impact**: All analysis results lost, no data persistence
+- **Solution**: Fix database service integration and storage logic
+
+### Immediate Action Items
+
+#### High Priority (Blockers)
+1. **Fix Router Import Issues**
+   - Resolve `AttributeError: module has no attribute 'router'`
+   - Ensure analyzer router loads properly in main.py
+   - Test all analyzer endpoints accessibility
+
+2. **Implement Real Document Processing**
+   - Replace mock responses with actual LangExtract processing
+   - Integrate `ImprovedLegalDocumentExtractor` with Gemini API
+   - Enable real clause extraction and relationship mapping
+
+3. **Fix MongoDB Results Storage**
+   - Ensure analysis results stored in `processed_documents` collection
+   - Implement proper database service calls
+   - Verify data persistence and retrieval
+
 ## Development Environment
 
 ### Local Development Setup
@@ -273,6 +321,13 @@ docker run -d -p 6333:6333 qdrant/qdrant
 # Google Cloud setup
 export GOOGLE_APPLICATION_CREDENTIALS="service-account.json"
 ```
+
+### Current Development Status
+- **Main API**: ✅ Running on port 8000
+- **Router Integration**: ❌ Failing with import errors
+- **Document Analysis**: ❌ Mock responses only
+- **MongoDB Storage**: ❌ Not working
+- **Real Extraction**: ❌ No actual AI processing
 
 ### Configuration Management
 - **Environment Variables**: Sensitive configuration via .env files
