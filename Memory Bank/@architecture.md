@@ -298,6 +298,48 @@ graph TD
 Legal Clarity API v1.0 ✅ ACTIVE on Ports 8000/8001
 ├── 📊 Health (tag: health)
 │   ├── GET    /health                        # System health check ✅ ACTIVE
+│   └── GET    /                              # API information and status ✅ ACTIVE
+├── 📄 Documents (tag: documents) - Port 8001
+│   ├── POST   /documents/upload               # Single document upload ✅ TESTED
+│   ├── POST   /documents/upload-multiple      # Bulk upload
+│   ├── GET    /documents/{document_id}        # Get document details
+│   ├── GET    /documents                      # List user documents
+│   ├── DELETE /documents/{document_id}        # Delete document
+│   └── GET    /documents/{document_id}/url    # Signed download URL
+├── 🔍 Analyzer (tag: analyzer) - Ports 8000/8001
+│   ├── POST   /analyzer/analyze               # Analyze document with AI ✅ IMPLEMENTED (Proxy)
+│   ├── GET    /analyzer/results/{doc_id}      # Get analysis results ✅ IMPLEMENTED (Proxy)
+│   ├── GET    /analyzer/documents             # List analyzed documents ✅ IMPLEMENTED (Proxy)
+│   ├── GET    /analyzer/stats/{user_id}       # Get user statistics ✅ IMPLEMENTED (Proxy)
+│   ├── DELETE /analyzer/results/{doc_id}      # Delete analysis results ✅ IMPLEMENTED (Proxy)
+│   └── GET    /analyzer/health                # Analyzer health check ✅ IMPLEMENTED (Proxy)
+├── 🔍 Document Analysis (tag: Document Analysis) - Port 8001 - **ROUTER VISIBILITY FIXED**
+│   ├── POST   /api/analyzer/analyze           # Analyze document with AI ✅ VISIBLE (Simplified)
+│   ├── GET    /api/analyzer/results/{doc_id}  # Get analysis results ✅ VISIBLE (Simplified)
+│   └── GET    /api/analyzer/health            # Analyzer health check ✅ VISIBLE (Simplified)
+├── ⚖️ Legal Extraction (tag: Legal Extraction) - Port 8001 - **ROUTER VISIBILITY FIXED**
+│   ├── POST   /api/extractor/extract          # Extract clauses from documents ✅ VISIBLE (Simplified)
+│   ├── GET    /api/extractor/results/{doc_id} # Get extraction results ✅ VISIBLE (Simplified)
+│   └── GET    /api/extractor/health           # Legal extractor health check ✅ VISIBLE (Simplified)
+├── 🗄️ VectorDB (tag: vectordb) - Port 8001
+│   ├── POST   /chat/query                     # Submit query with context ✅ IMPLEMENTED
+│   ├── GET    /chat/history                   # Retrieve conversation history ✅ IMPLEMENTED
+│   ├── POST   /chat/feedback                  # Submit user feedback ✅ IMPLEMENTED
+│   ├── GET    /chat/suggestions               # Get suggested follow-up questions ✅ IMPLEMENTED
+│   └── GET    /vectordb/status                # VectorDB status endpoint ✅ IMPLEMENTED
+└── 🔧 Admin (Planned)                        # Administrative endpoints
+```
+
+#### API Architecture Notes
+- **Port 8001 (Root API)**: Main entry point with document upload and proxy routing to analyzer
+- **Port 8000 (Analyzer API)**: Specialized document analysis with LangExtract integration
+- **Proxy Communication**: httpx-based routing enables seamless cross-API functionality
+- **Router Visibility**: Fixed tag mismatch issue - all three sections now visible in API documentation
+- **Simplified Endpoints**: Document Analysis and Legal Extraction endpoints are visible but use simplified implementations without full Pydantic schemas, parameters, or example values
+```
+Legal Clarity API v1.0 ✅ ACTIVE on Ports 8000/8001
+├── 📊 Health (tag: health)
+│   ├── GET    /health                        # System health check ✅ ACTIVE
 │   └── GET    /                               # API information and status ✅ ACTIVE
 ├── 📄 Documents (tag: documents) - Port 8001
 │   ├── POST   /documents/upload               # Single document upload ✅ TESTED

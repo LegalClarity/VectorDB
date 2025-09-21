@@ -28,7 +28,14 @@
    - **Impact**: Eliminated sys.path manipulation and standardized import patterns
    - **Validation**: All services importing correctly without path manipulation
 
-3. **Clause Extraction System**
+3. **FastAPI Documentation Router Visibility Fix**
+   - **Status**: ✅ Completed
+   - **Problem**: Only "Documents" section visible in API docs, "Document Analysis" and "Legal Extraction" sections missing
+   - **Root Cause**: Tag mismatch between `tags_metadata` ("analyzer") and router tags ("Document Analysis", "Legal Extraction")
+   - **Solution**: Updated `tags_metadata` to match router tags exactly
+   - **Result**: All three API sections now visible in Swagger UI documentation
+
+4. **Clause Extraction System**
    - **Status**: ✅ Completed
    - **Details**: Real-world clause extraction from legal documents
    - **Real Results**: Extracted 2 clauses from actual lease agreement:
@@ -36,19 +43,19 @@
      - "M/s. Force10 Networks India Pvt. Ltd." (Lessee)
    - **Accuracy**: 100% accuracy on test documents
 
-4. **Relationship Mapping**
+5. **Relationship Mapping**
    - **Status**: ✅ Completed
    - **Details**: Automatic relationship detection between clauses
    - **Results**: Successfully created 32 relationships from 12 extracted clauses
    - **Types**: Party-to-financial, clause-to-clause relationships
 
-5. **Results Persistence & Storage**
+6. **Results Persistence & Storage**
    - **Status**: ✅ Completed
    - **Details**: Complete JSON results and visualization data storage
    - **Files Generated**: `doc_1758215655_extraction.json`, `doc_1758215655_visualization.json`
    - **Integration**: Full Google Cloud Storage and MongoDB integration
 
-6. **Technical Infrastructure**
+7. **Technical Infrastructure**
    - **Status**: ✅ Production Ready
    - **Components**: FastAPI monorepo, Pydantic V2, tag-based APIs, health monitoring
    - **Performance**: <2 seconds response time, 100% uptime during testing

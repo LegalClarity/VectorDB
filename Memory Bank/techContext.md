@@ -93,6 +93,22 @@ DELETE /analyzer/results/{doc_id}         # Proxy to analyzer API ✅ IMPLEMENTE
 GET    /analyzer/health                   # Proxy to analyzer API ✅ IMPLEMENTED
 ```
 
+#### Document Analyzer API (Tag: Document Analysis) - **PORT 8001** - **ROUTER VISIBILITY FIXED**
+```python
+POST   /api/analyzer/analyze              # Analyze document with AI ✅ VISIBLE (Simplified)
+GET    /api/analyzer/results/{doc_id}     # Get analysis results ✅ VISIBLE (Simplified)
+GET    /api/analyzer/health               # Analyzer health check ✅ VISIBLE (Simplified)
+```
+
+#### Legal Extractor API (Tag: Legal Extraction) - **PORT 8001** - **ROUTER VISIBILITY FIXED**
+```python
+POST   /api/extractor/extract             # Extract clauses from documents ✅ VISIBLE (Simplified)
+GET    /api/extractor/results/{doc_id}    # Get extraction results ✅ VISIBLE (Simplified)
+GET    /api/extractor/health              # Legal extractor health check ✅ VISIBLE (Simplified)
+```
+
+**Note**: Document Analysis and Legal Extraction endpoints are now visible in API documentation but use simplified implementations without full Pydantic schemas, parameters, or example values. These need enhancement for production use.
+
 #### Legal Extractor API (Tag: legal-extraction)
 ```python
 POST   /api/extractor/extract         # Extract clauses from legal documents ✅ IMPLEMENTED
