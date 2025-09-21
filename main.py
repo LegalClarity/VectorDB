@@ -20,6 +20,18 @@ import langextract as lx
 import textwrap
 from dotenv import load_dotenv
 
+# Import enhanced models and processor
+from enhanced_models import (
+    DocumentAnalysisRequest, DocumentExtractionRequest, ApiResponse,
+    AnalysisResult, ExtractionResult, ProcessingStatusResponse,
+    DocumentNotFoundError, ProcessingError, ProcessingStatus
+)
+from enhanced_document_processor import EnhancedDocumentProcessor
+from enhanced_background_processing import (
+    process_enhanced_document_analysis,
+    process_enhanced_legal_extraction
+)
+
 # Load environment variables from .env file
 load_dotenv()
 
@@ -71,42 +83,25 @@ class Settings:
 
 settings = Settings()
 
-# Set up LangExtract API key
-os.environ['LANGEXTRACT_API_KEY'] = settings.langextract_api_key
-
 # Global services
 mongodb_client = None
 mongodb_db = None
 gcs_client = None
 gcs_bucket = None
-
-# Request/Response Models
-class DocumentAnalysisRequest(BaseModel):
-    document_id: str = Field(..., description="Document ID from MongoDB", example="c0133bb6-f25a-4114-a4c3-1b1e8630e27f")
-    user_id: Optional[str] = Field(None, description="User ID for security", example="e0722091-aaeb-43f3-8cac-d6562c85ec79")
-    document_type: Optional[str] = Field("rental", description="Type of document", example="rental")
-
-class DocumentExtractionRequest(BaseModel):
-    document_id: str = Field(..., description="Document ID from MongoDB", example="c0133bb6-f25a-4114-a4c3-1b1e8630e27f")
-    user_id: Optional[str] = Field(None, description="User ID for security", example="e0722091-aaeb-43f3-8cac-d6562c85ec79")
-    document_type: str = Field("rental_agreement", description="Type of legal document", example="rental_agreement")
-
-class ApiResponse(BaseModel):
-    success: bool = Field(True, description="Request success status")
-    data: Optional[Dict[str, Any]] = Field(None, description="Response data")
-    message: Optional[str] = Field(None, description="Response message")
-    error: Optional[str] = Field(None, description="Error message if any")
-    meta: Optional[Dict[str, Any]] = Field(None, description="Response metadata")
+document_processor = None
 
 # Lifespan manager
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Application lifespan manager"""
-    global mongodb_client, mongodb_db, gcs_client, gcs_bucket
+    global mongodb_client, mongodb_db, gcs_client, gcs_bucket, document_processor
     
     logger.info("Starting Legal Clarity API...")
     
     try:
+        # Set up LangExtract API key
+        os.environ['LANGEXTRACT_API_KEY'] = settings.langextract_api_key
+        
         # Initialize MongoDB
         mongodb_client = motor.motor_asyncio.AsyncIOMotorClient(settings.mongo_uri)
         mongodb_db = mongodb_client[settings.mongo_db]
@@ -120,6 +115,10 @@ async def lifespan(app: FastAPI):
             gcs_client = storage.Client(project=settings.google_project_id)
         gcs_bucket = gcs_client.bucket(settings.gcs_bucket)
         logger.info("✅ Google Cloud Storage initialized")
+        
+        # Initialize Enhanced Document Processor
+        document_processor = EnhancedDocumentProcessor(gcs_client, settings)
+        logger.info("✅ Enhanced Document Processor initialized")
         
         logger.info("✅ Legal Clarity API started successfully")
         
@@ -295,13 +294,14 @@ async def analyze_document(
         gcs_path = document.get("gcs_object_path", "")
         document_text = await download_document_text(gcs_path)
         
-        # Schedule background analysis
+        # Schedule enhanced background analysis
         background_tasks.add_task(
-            process_document_analysis,
+            process_enhanced_document_analysis,
             request.document_id,
-            document_text,
+            gcs_path,  # Pass GCS path instead of document text
             request.document_type,
-            request.user_id or document.get("user_id")
+            request.user_id or document.get("user_id"),
+            request.analysis_options or {}  # Already a dict
         )
         
         return ApiResponse(
@@ -408,13 +408,14 @@ async def extract_legal_clauses(
         gcs_path = document.get("gcs_object_path", "")
         document_text = await download_document_text(gcs_path)
         
-        # Schedule background extraction
+        # Schedule enhanced background extraction
         background_tasks.add_task(
-            process_legal_extraction,
+            process_enhanced_legal_extraction,
             request.document_id,
-            document_text,
+            gcs_path,  # Pass GCS path instead of document text
             request.document_type,
-            request.user_id or document.get("user_id")
+            request.user_id or document.get("user_id"),
+            request.extraction_options or {}  # Already a dict
         )
         
         return ApiResponse(
