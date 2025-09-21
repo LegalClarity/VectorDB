@@ -194,27 +194,6 @@ async def health_check():
     return {"status": "healthy", "service": "legal-extractor"}
 
 
-@router.get("/results/{document_id}")
-async def get_extraction_results(
-    document_id: str,
-    user_id: str,
-    mongodb_service: MongoDBService = Depends(get_mongodb_service)
-):
-    """Get extraction results for a specific document"""
-    try:
-        result = await mongodb_service.get_processed_document(document_id, user_id)
-        
-        if not result:
-            raise HTTPException(status_code=404, detail="Processed document not found")
-        
-        return ExtractionResponse(success=True, data=result)
-        
-    except HTTPException:
-        raise
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to retrieve results: {str(e)}")
-
-
 @router.get("/documents")
 async def list_processed_documents(
     user_id: str,

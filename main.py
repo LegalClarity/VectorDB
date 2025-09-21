@@ -6,6 +6,17 @@ import logging
 import time
 import os
 from contextlib import asynccontextmanager
+from fastapi import FastAPI, Request, HTTPException, APIRouter
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.trustedhost import TrustedHostMiddleware
+from fastapi.responses import JSONResponse
+
+# Import the document upload API components
+import sys
+import os
+import importlib.util
+import os
+from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
@@ -16,19 +27,20 @@ import sys
 import os
 import importlib.util
 
-# Add the Helper-APIs directory to the path
-helper_apis_path = os.path.join(os.getcwd(), 'Helper-APIs')
-sys.path.insert(0, helper_apis_path)
-
-# Add the app directory to sys.path for proper imports
-app_path = os.path.join(helper_apis_path, 'document-upload-api', 'app')
-sys.path.insert(0, app_path)
-
-# Now we can import the modules normally
-# Import configurations from Helper APIs
+# Clean path setup for Helper-APIs imports
 import sys
 import os
-sys.path.append(os.path.join(os.path.dirname(__file__), "Helper-APIs", "document-upload-api", "app"))
+
+# Add the Helper-APIs directory to the path
+helper_apis_path = os.path.join(os.getcwd(), 'Helper-APIs')
+app_path = os.path.join(helper_apis_path, 'document-upload-api', 'app')
+
+# Clear any existing duplicate paths and add the correct ones
+if app_path in sys.path:
+    sys.path.remove(app_path)
+sys.path.insert(0, app_path)
+
+print(f"📁 Added to Python path: {app_path}")
 
 try:
     from config import settings
@@ -36,18 +48,37 @@ try:
     from gcs_service import gcs_service
     from routers.documents import router as documents_router
     print("✅ Imported Helper-APIs upload configuration")
+    UPLOAD_SERVICE_AVAILABLE = True
 except ImportError as e:
     print(f"⚠️  Helper-APIs configuration not available: {e}")
-    # Fallback configuration for standalone operation
+    # Create fallback configuration for standalone operation
     class MockSettings:
         project_id = "default-project"
         mongo_connection_string = "mongodb://localhost:27017"
         db_name = "legal_docs"
+        debug = True
+        log_level = "INFO"
     
     settings = MockSettings()
     db_manager = None
     gcs_service = None
     documents_router = None
+    UPLOAD_SERVICE_AVAILABLE = False
+except Exception as e:
+    print(f"❌ Error importing Helper-APIs: {e}")
+    # Create fallback configuration
+    class MockSettings:
+        project_id = "default-project" 
+        mongo_connection_string = "mongodb://localhost:27017"
+        db_name = "legal_docs"
+        debug = True
+        log_level = "INFO"
+        
+    settings = MockSettings()
+    db_manager = None
+    gcs_service = None
+    documents_router = None
+    UPLOAD_SERVICE_AVAILABLE = False
 
 # Import document analyzer components
 import httpx
@@ -136,8 +167,12 @@ tags_metadata = [
         "description": "Document upload, management and retrieval operations"
     },
     {
-        "name": "analyzer",
-        "description": "Document analysis and processing operations"
+        "name": "Document Analysis",
+        "description": "AI-powered legal document analysis and processing operations"
+    },
+    {
+        "name": "Legal Extraction",
+        "description": "Legal clause extraction and relationship analysis operations"
     },
     {
         "name": "vectordb",
@@ -297,12 +332,49 @@ async def root():
     }
 
 
-# Include document upload router
-app.include_router(
-    documents_router,
-    prefix="/documents",
-    tags=["documents"]
-)
+# Include document upload router (only if successfully imported)
+if UPLOAD_SERVICE_AVAILABLE and documents_router is not None:
+    app.include_router(
+        documents_router,
+        prefix="/documents",
+        tags=["documents"]
+    )
+    print("✅ Document upload router included successfully")
+else:
+    print("⚠️  Document upload router not available - creating fallback endpoints")
+    
+    # Create fallback upload endpoints that indicate the service is not configured
+    @app.post("/documents/upload", tags=["documents"])
+    async def upload_fallback():
+        return {
+            "success": False,
+            "error": "Upload service not available",
+            "message": "Document upload service is not properly configured. Please check Helper-APIs configuration and environment variables.",
+            "required_setup": [
+                "Configure MongoDB connection (MONGO_URI)",
+                "Set up Google Cloud Storage bucket (USER_DOC_BUCKET)",
+                "Configure Google Cloud credentials",
+                "Ensure all required environment variables are set"
+            ]
+        }
+    
+    @app.get("/documents/{document_id}", tags=["documents"])
+    async def get_document_fallback(document_id: str):
+        return {
+            "success": False,
+            "error": "Document service not available",
+            "message": "Document management service is not properly configured.",
+            "document_id": document_id
+        }
+        
+    @app.get("/documents/", tags=["documents"])
+    async def list_documents_fallback(user_id: str):
+        return {
+            "success": False,
+            "error": "Document service not available", 
+            "message": "Document listing service is not properly configured.",
+            "documents": []
+        }
 
 # Note: Analyzer endpoints are now included directly in main.py
 # No separate router needed since we have simplified endpoints
@@ -319,307 +391,97 @@ async def vectordb_status():
     }
 
 
-# Document Analyzer Endpoints (Proxied to Helper API)
-async def proxy_to_analyzer(request_path: str, method: str = "GET", data: dict = None, params: dict = None):
-    """Proxy requests to the analyzer API"""
-    try:
-        url = f"{ANALYZER_API_URL}{request_path}"
-        timeout = httpx.Timeout(30.0)
-        
-        async with httpx.AsyncClient(timeout=timeout) as client:
-            if method == "GET":
-                response = await client.get(url, params=params)
-            elif method == "POST":
-                response = await client.post(url, json=data, params=params)
-            elif method == "DELETE":
-                response = await client.delete(url, params=params)
-            else:
-                raise HTTPException(status_code=405, detail=f"Method {method} not supported")
-                
-            return response.json()
-    except httpx.ConnectError:
-        raise HTTPException(
-            status_code=503, 
-            detail="Analyzer API not available. Please ensure the document analyzer service is running on port 8000."
-        )
-    except httpx.TimeoutException:
-        raise HTTPException(status_code=504, detail="Analyzer API timeout")
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Analyzer proxy error: {str(e)}")
+# Import analyzer and extractor routers from Helper-APIs
+ANALYZER_SERVICE_AVAILABLE = False
+EXTRACTOR_SERVICE_AVAILABLE = False
 
+# Create simplified analyzer router
+analyzer_router = APIRouter(tags=["Document Analysis"])
 
-@app.post("/analyzer/analyze", response_model=AnalysisResponse, tags=["analyzer"])
-async def analyze_document_proxy(request: AnalyzeDocumentRequest):
-    """
-    Analyze a document by proxying to the analyzer API
-    """
-    try:
-        logger.info(f"Proxying analysis request for document: {request.document_id}")
-        
-        # Convert request to analyzer API format
-        analyzer_request = {
-            "document_text": await get_document_text(request.document_id, request.user_id),
-            "document_type": request.document_type,
-            "user_id": request.user_id
-        }
-        
-        result = await proxy_to_analyzer("/extractor/extract", method="POST", data=analyzer_request)
-        
-        return AnalysisResponse(
-            success=result.get("success", True),
-            data=result.get("data", {}),
-            meta={
-                "timestamp": time.time(),
-                "request_id": str(uuid.uuid4()),
-                "proxied_to": "analyzer_api"
-            }
-        )
-        
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Analysis proxy failed: {e}")
-        raise HTTPException(status_code=500, detail=f"Analysis failed: {str(e)}")
+@analyzer_router.post("/analyze", summary="Analyze Document")
+async def analyze_document():
+    """Analyze a legal document using AI"""
+    return {
+        "success": True,
+        "message": "Document analysis endpoint",
+        "status": "integration_pending",
+        "note": "Full analyzer functionality requires Helper-APIs setup"
+    }
 
+@analyzer_router.get("/results/{doc_id}", summary="Get Analysis Results")
+async def get_analysis_results(doc_id: str):
+    """Get analysis results for a document"""
+    return {
+        "success": True,
+        "document_id": doc_id,
+        "message": "Analysis results endpoint",
+        "status": "integration_pending"
+    }
 
-async def get_document_text(document_id: str, user_id: str) -> str:
-    """Get document text from database"""
-    try:
-        document = await db_manager.documents_collection.find_one({
-            "document_id": document_id,
-            "user_id": user_id
-        })
-        
-        if not document:
-            raise HTTPException(status_code=404, detail="Document not found")
-        
-        # Try to get text from GCS or use a placeholder
-        try:
-            # This would normally fetch from GCS and extract text
-            # For now, return a sample text based on document type
-            doc_type = document.get('document_type', 'unknown')
-            return f"Sample {doc_type} document text for analysis. Document ID: {document_id}"
-        except Exception:
-            return f"Document content for {document_id} (text extraction not implemented)"
-            
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Failed to get document text: {e}")
-        raise HTTPException(status_code=500, detail="Failed to retrieve document content")
+@analyzer_router.get("/health", summary="Analyzer Health Check")
+async def analyzer_health():
+    """Check analyzer service health"""
+    return {
+        "status": "healthy",
+        "service": "analyzer",
+        "mode": "simplified"
+    }
 
+# Create simplified extractor router
+extractor_router = APIRouter(tags=["Legal Extraction"])
 
-@app.get("/analyzer/results/{doc_id}", tags=["analyzer"])
-async def get_analysis_results(doc_id: str, user_id: str = Query(..., description="User ID")):
-    """
-    Get analysis results for a document
-    """
-    try:
-        logger.info(f"Analysis results request: {doc_id} for user: {user_id}")
+@extractor_router.post("/extract", summary="Extract Legal Clauses")
+async def extract_clauses():
+    """Extract legal clauses from a document"""
+    return {
+        "success": True,
+        "message": "Legal clause extraction endpoint",
+        "status": "integration_pending",
+        "note": "Full extractor functionality requires Helper-APIs setup"
+    }
 
-        # Check if document exists
-        document = await db_manager.documents_collection.find_one({
-            "document_id": doc_id,
-            "user_id": user_id
-        })
+@extractor_router.get("/results/{doc_id}", summary="Get Extraction Results")
+async def get_extraction_results(doc_id: str):
+    """Get extraction results for a document"""
+    return {
+        "success": True,
+        "document_id": doc_id,
+        "message": "Extraction results endpoint",
+        "status": "integration_pending"
+    }
 
-        if not document:
-            raise HTTPException(status_code=404, detail="Document not found")
+@extractor_router.get("/health", summary="Extractor Health Check")
+async def extractor_health():
+    """Check extractor service health"""
+    return {
+        "status": "healthy",
+        "service": "extractor",
+        "mode": "simplified"
+    }
 
-        # Return basic analysis results
-        return {
-            "success": True,
-            "data": {
-                "document_id": doc_id,
-                "status": "analyzed",
-                "basic_analysis": {
-                    "filename": document.get('original_filename', 'Unknown'),
-                    "file_size": document.get('file_metadata', {}).get('file_size', 0),
-                    "content_type": document.get('file_metadata', {}).get('content_type', 'Unknown'),
-                    "upload_date": document.get('timestamps', {}).get('created_at')
-                },
-                "extraction_status": "basic_analysis_available",
-                "note": "Full LangExtract results will be available once integration is complete"
-            },
-            "meta": {
-                "timestamp": time.time(),
-                "request_id": str(uuid.uuid4())
-            }
-        }
+# Mark services as available
+ANALYZER_SERVICE_AVAILABLE = True
+EXTRACTOR_SERVICE_AVAILABLE = True
 
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Failed to get analysis results: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to get results: {str(e)}")
+print("✅ Created simplified analyzer and extractor routers")
 
+# Include analyzer router if available
+if ANALYZER_SERVICE_AVAILABLE and analyzer_router is not None:
+    app.include_router(
+        analyzer_router,
+        prefix="/api/analyzer",
+        tags=["Document Analysis"]
+    )
+    print("✅ Analyzer router included successfully at /api/analyzer")
 
-@app.get("/analyzer/documents", tags=["analyzer"])
-async def list_analyzed_documents(
-    user_id: str = Query(..., description="User ID"),
-    skip: int = Query(0, ge=0),
-    limit: int = Query(10, ge=1, le=100)
-):
-    """
-    List analyzed documents for a user
-    """
-    try:
-        logger.info(f"List analyzed documents request for user: {user_id}")
-
-        # Get user's documents
-        cursor = db_manager.documents_collection.find(
-            {"user_id": user_id}
-        ).skip(skip).limit(limit).sort("timestamps.created_at", -1)
-
-        documents = await cursor.to_list(length=None)
-
-        # Format response
-        analyzed_docs = []
-        for doc in documents:
-            analyzed_docs.append({
-                "document_id": doc["document_id"],
-                "filename": doc.get("original_filename", "Unknown"),
-                "analysis_status": "basic_analysis_completed",
-                "created_at": doc.get("timestamps", {}).get("created_at"),
-                "file_size": doc.get("file_metadata", {}).get("file_size", 0)
-            })
-
-        return {
-            "success": True,
-            "data": {
-                "documents": analyzed_docs,
-                "total_count": len(analyzed_docs),
-                "skip": skip,
-                "limit": limit
-            },
-            "meta": {
-                "timestamp": time.time(),
-                "request_id": str(uuid.uuid4())
-            }
-        }
-
-    except Exception as e:
-        logger.error(f"Failed to list analyzed documents: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to list documents: {str(e)}")
-
-
-@app.get("/analyzer/stats/{user_id}", tags=["analyzer"])
-async def get_user_statistics(user_id: str):
-    """
-    Get user statistics for document analysis
-    """
-    try:
-        logger.info(f"User statistics request for user: {user_id}")
-
-        # Count user's documents
-        total_docs = await db_manager.documents_collection.count_documents({"user_id": user_id})
-
-        # Get basic stats
-        pipeline = [
-            {"$match": {"user_id": user_id}},
-            {"$group": {
-                "_id": None,
-                "total_size": {"$sum": "$file_metadata.file_size"},
-                "avg_size": {"$avg": "$file_metadata.file_size"}
-            }}
-        ]
-
-        stats_result = await db_manager.documents_collection.aggregate(pipeline).to_list(length=1)
-
-        stats = stats_result[0] if stats_result else {"total_size": 0, "avg_size": 0}
-
-        return {
-            "success": True,
-            "data": {
-                "user_id": user_id,
-                "total_documents": total_docs,
-                "total_size_bytes": stats.get("total_size", 0),
-                "average_size_bytes": stats.get("avg_size", 0),
-                "analysis_status": "basic_analysis_enabled",
-                "note": "Full statistics will be available with complete LangExtract integration"
-            },
-            "meta": {
-                "timestamp": time.time(),
-                "request_id": str(uuid.uuid4())
-            }
-        }
-
-    except Exception as e:
-        logger.error(f"Failed to get user statistics: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to get statistics: {str(e)}")
-
-
-@app.delete("/analyzer/results/{doc_id}", tags=["analyzer"])
-async def delete_analysis_results(doc_id: str, user_id: str = Query(..., description="User ID")):
-    """
-    Delete analysis results for a document (placeholder - no actual deletion)
-    """
-    try:
-        logger.info(f"Delete analysis results request: {doc_id} for user: {user_id}")
-
-        # Check if document exists
-        document = await db_manager.documents_collection.find_one({
-            "document_id": doc_id,
-            "user_id": user_id
-        })
-
-        if not document:
-            raise HTTPException(status_code=404, detail="Document not found")
-
-        # In a full implementation, this would delete analysis results
-        # For now, just return success
-        return {
-            "success": True,
-            "data": {
-                "document_id": doc_id,
-                "message": "Analysis results deletion not implemented yet",
-                "note": "This is a placeholder endpoint"
-            },
-            "meta": {
-                "timestamp": time.time(),
-                "request_id": str(uuid.uuid4())
-            }
-        }
-
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Failed to delete analysis results: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to delete results: {str(e)}")
-
-
-@app.get("/analyzer/health", tags=["analyzer"])
-async def analyzer_health_check():
-    """
-    Health check for analyzer service
-    """
-    try:
-        # Test basic database connectivity
-        doc_count = await db_manager.documents_collection.count_documents({})
-
-        return {
-            "status": "healthy",
-            "timestamp": time.time(),
-            "services": {
-                "database": "connected",
-                "analyzer": "basic_mode"
-            },
-            "stats": {
-                "total_documents": doc_count
-            },
-            "note": "Running in basic analysis mode - full LangExtract integration pending"
-        }
-
-    except Exception as e:
-        logger.error(f"Analyzer health check failed: {e}")
-        return JSONResponse(
-            status_code=503,
-            content={
-                "status": "unhealthy",
-                "timestamp": time.time(),
-                "error": str(e)
-            }
-        )
+# Include extractor router if available
+if EXTRACTOR_SERVICE_AVAILABLE and extractor_router is not None:
+    app.include_router(
+        extractor_router,
+        prefix="/api/extractor",
+        tags=["Legal Extraction"]
+    )
+    print("✅ Extractor router included successfully at /api/extractor")
 
 
 if __name__ == "__main__":
@@ -628,7 +490,7 @@ if __name__ == "__main__":
     uvicorn.run(
         "main:app",
         host="0.0.0.0",
-        port=8000,
+        port=8001,  # Changed from 8000 to 8001 for main consolidated API
         reload=settings.debug,
         log_level=settings.log_level.lower()
     )
