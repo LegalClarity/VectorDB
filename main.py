@@ -490,7 +490,7 @@ if __name__ == "__main__":
     uvicorn.run(
         "main:app",
         host="0.0.0.0",
-        port=8001,  # Changed from 8000 to 8001 for main consolidated API
+        port=8000,  # Changed from 8000 to 8001 for main consolidated API
         reload=settings.debug,
         log_level=settings.log_level.lower()
     )
