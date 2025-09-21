@@ -18,6 +18,7 @@
 - ✅ **Real Document Processing**: Successfully processed actual legal PDFs with 100% accuracy
 - ✅ **Dual-API Architecture**: Both APIs running simultaneously with health monitoring
 - ✅ **Production Readiness**: FastAPI monorepo with comprehensive error handling and logging
+- ✅ **Security Hardening**: Zero hardcoded secrets, environment-driven configuration, production-safe code
 
 ## Progress Metrics
 
@@ -215,7 +216,38 @@
 - **Health Monitoring**: Independent health checks and comprehensive logging across services
 - **Production Ready**: System validated with real document processing and 100% accuracy
 
-## Sprint 5: FastAPI Documentation Router Visibility Fix (September 21, 2025)
+## Sprint 6: Security Hardening & Environment Configuration (September 21, 2025)
+**Goal**: Secure API configuration, remove hardcoded secrets, and implement proper environment variable management
+**Status**: ✅ Completed
+**Key Deliverables**:
+- ✅ **Environment Variable Security**: Removed all hardcoded API keys and secrets from main.py
+- ✅ **.env File Integration**: Implemented python-dotenv for secure configuration loading
+- ✅ **Configuration Validation**: Added required environment variable validation with clear error messages
+- ✅ **GCS Service Account**: Proper service account authentication using environment variables
+- ✅ **API Key Management**: Eliminated direct API key exposure in source code
+- ✅ **Production Safety**: Code now safe for public repository hosting without credential exposure
+
+**Security Improvements Implemented**:
+- **API Key Removal**: Eliminated hardcoded Gemini API key fallback values
+- **Environment Loading**: Added dotenv.load_dotenv() for secure .env file loading
+- **Validation Layer**: Settings class now validates all required environment variables on startup
+- **Service Account Path**: GCS authentication now uses configurable service account path
+- **Error Handling**: Clear error messages for missing required environment variables
+- **Code Safety**: All sensitive configuration moved to environment variables
+
+**Results**:
+- ✅ **Zero Hardcoded Secrets**: No API keys or credentials in source code
+- ✅ **Environment-Driven Config**: All configuration loaded from .env file
+- ✅ **Validation on Startup**: Application fails fast with clear error messages for missing config
+- ✅ **Production Ready**: Code safe for public repositories and deployment
+- ✅ **Maintainability**: Configuration changes require only .env file updates
+
+**Current Security Status**:
+- **API Keys**: ✅ Secured in environment variables
+- **Database Credentials**: ✅ Environment-driven MongoDB connection
+- **Cloud Service Accounts**: ✅ Configurable GCS authentication
+- **Secrets Management**: ✅ No hardcoded values in codebase
+- **Environment Validation**: ✅ Required variables validated on startup
 **Goal**: Fix FastAPI router visibility issues in API documentation
 **Status**: ✅ Completed
 **Problem Identified**: Only "Documents" section visible in API docs, "Document Analysis" and "Legal Extraction" sections missing despite routers being properly included
@@ -396,4 +428,4 @@
 
 ---
 
-*Document Version: 1.3 | Last Updated: September 21, 2025 | Project Management Team*
+*Document Version: 1.4 | Last Updated: September 21, 2025 | Project Management Team*

@@ -46,9 +46,85 @@ app_module/
 
 ### Coding Standards
 
+### Coding Standards
+
 #### Python Style Guidelines
 - **PEP 8 Compliance**: Strict adherence to Python style guidelines
 - **Type Hints**: Comprehensive type annotations for all functions and methods
+
+#### Security Patterns
+
+##### Environment Configuration Pattern
+Legal Clarity implements a **secure environment-driven configuration** pattern:
+
+```python
+# Pattern: Secure Environment Loading
+from dotenv import load_dotenv
+import os
+
+# Load environment variables from .env file
+load_dotenv()
+
+class Settings:
+    def __init__(self):
+        # Required environment variables (no defaults for secrets)
+        self.api_key = os.getenv('API_KEY')  # No fallback secrets
+        self.database_url = os.getenv('DATABASE_URL')
+        
+        # Optional with safe defaults
+        self.debug = os.getenv('DEBUG', 'false').lower() == 'true'
+        
+        # Validate required variables
+        self._validate_config()
+    
+    def _validate_config(self):
+        """Validate all required environment variables are present"""
+        required = ['API_KEY', 'DATABASE_URL']
+        missing = [var for var in required if not os.getenv(var)]
+        if missing:
+            raise ValueError(f"Missing required environment variables: {missing}")
+```
+
+##### Service Account Authentication Pattern
+Google Cloud services use configurable service account authentication:
+
+```python
+# Pattern: Configurable Service Account Authentication
+class CloudSettings:
+    def __init__(self):
+        self.service_account_path = os.getenv('GCS_SERVICE_ACCOUNT_PATH')
+        self.project_id = os.getenv('GOOGLE_PROJECT_ID')
+    
+    def get_storage_client(self):
+        """Initialize GCS client with service account"""
+        if self.service_account_path:
+            return storage.Client.from_service_account_json(self.service_account_path)
+        else:
+            return storage.Client(project=self.project_id)
+```
+
+##### API Key Management Pattern
+All API keys are managed through environment variables with validation:
+
+```python
+# Pattern: Secure API Key Management
+class APISettings:
+    def __init__(self):
+        # Load from environment only
+        self.gemini_api_key = os.getenv('GEMINI_API_KEY')
+        self.qdrant_api_key = os.getenv('QDRANT_API_KEY')
+        
+        # Validate on startup
+        if not self.gemini_api_key:
+            raise ValueError("GEMINI_API_KEY environment variable is required")
+```
+
+**Security Benefits**:
+- ✅ **Zero Hardcoded Secrets**: No API keys in source code
+- ✅ **Environment Isolation**: Different configs for dev/staging/production
+- ✅ **Startup Validation**: Fail fast if required secrets missing
+- ✅ **Repository Safety**: Code safe for public GitHub repositories
+- ✅ **Configuration Flexibility**: Easy environment switching without code changes
 - **Docstrings**: Google-style docstrings for all public functions and classes
 - **Naming Conventions**:
   - `snake_case` for variables, functions, and methods
