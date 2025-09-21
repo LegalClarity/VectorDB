@@ -19,6 +19,7 @@ Legal Clarity is built as a **monorepo FastAPI application** with modular compon
 - **Google Cloud Document AI**: Advanced OCR and document processing ✅ INTEGRATED
 - **Google Cloud Vertex AI**: Embeddings and custom model hosting ✅ INTEGRATED
 - **LangChain/LangGraph**: Orchestration framework for complex AI workflows ✅ INTEGRATED
+- **Legal Extractor Service**: Production-ready legal document extraction with REST API ✅ IMPLEMENTED
 
 #### Data Storage and Processing
 - **Qdrant Vector Database**: High-performance vector similarity search ✅ ACTIVE
@@ -72,14 +73,47 @@ DELETE /documents/{document_id}       # Delete document
 GET    /documents/{document_id}/url   # Generate signed download URL
 ```
 
-#### Document Analyzer API (Tag: analyzer)
+#### Document Analyzer API (Tag: analyzer) - **PORT 8000**
 ```python
-POST   /analyzer/analyze              # Analyze document with AI ✅ IMPLEMENTED
-GET    /analyzer/results/{doc_id}     # Get analysis results ✅ IMPLEMENTED
-GET    /analyzer/documents            # List analyzed documents ✅ IMPLEMENTED
-GET    /analyzer/stats/{user_id}      # Get user statistics ✅ IMPLEMENTED
-DELETE /analyzer/results/{doc_id}     # Delete analysis results ✅ IMPLEMENTED
-GET    /analyzer/health               # Analyzer health check ✅ IMPLEMENTED
+POST   /api/analyzer/analyze              # Analyze document with AI ✅ IMPLEMENTED
+GET    /api/analyzer/results/{doc_id}     # Get analysis results ✅ IMPLEMENTED
+GET    /api/analyzer/documents            # List analyzed documents ✅ IMPLEMENTED
+GET    /api/analyzer/stats/{user_id}      # Get user statistics ✅ IMPLEMENTED
+DELETE /api/analyzer/results/{doc_id}     # Delete analysis results ✅ IMPLEMENTED
+GET    /api/analyzer/health               # Analyzer health check ✅ IMPLEMENTED
+```
+
+#### Root API Proxy Endpoints (Tag: analyzer) - **PORT 8001**
+```python
+POST   /analyzer/analyze                  # Proxy to analyzer API ✅ IMPLEMENTED
+GET    /analyzer/results/{doc_id}         # Proxy to analyzer API ✅ IMPLEMENTED
+GET    /analyzer/documents                # Proxy to analyzer API ✅ IMPLEMENTED
+GET    /analyzer/stats/{user_id}          # Proxy to analyzer API ✅ IMPLEMENTED
+DELETE /analyzer/results/{doc_id}         # Proxy to analyzer API ✅ IMPLEMENTED
+GET    /analyzer/health                   # Proxy to analyzer API ✅ IMPLEMENTED
+```
+
+#### Document Analyzer API (Tag: Document Analysis) - **PORT 8001** - **ROUTER VISIBILITY FIXED**
+```python
+POST   /api/analyzer/analyze              # Analyze document with AI ✅ VISIBLE (Simplified)
+GET    /api/analyzer/results/{doc_id}     # Get analysis results ✅ VISIBLE (Simplified)
+GET    /api/analyzer/health               # Analyzer health check ✅ VISIBLE (Simplified)
+```
+
+#### Legal Extractor API (Tag: Legal Extraction) - **PORT 8001** - **ROUTER VISIBILITY FIXED**
+```python
+POST   /api/extractor/extract             # Extract clauses from documents ✅ VISIBLE (Simplified)
+GET    /api/extractor/results/{doc_id}    # Get extraction results ✅ VISIBLE (Simplified)
+GET    /api/extractor/health              # Legal extractor health check ✅ VISIBLE (Simplified)
+```
+
+**Note**: Document Analysis and Legal Extraction endpoints are now visible in API documentation but use simplified implementations without full Pydantic schemas, parameters, or example values. These need enhancement for production use.
+
+#### Legal Extractor API (Tag: legal-extraction)
+```python
+POST   /api/extractor/extract         # Extract clauses from legal documents ✅ IMPLEMENTED
+POST   /api/extractor/structured      # Create structured legal documents ✅ IMPLEMENTED
+GET    /api/extractor/health          # Legal extractor health check ✅ IMPLEMENTED
 ```
 
 #### RAG Chatbot API (Tag: vectordb)
@@ -246,6 +280,18 @@ graph TD
 
 ### Third-party Services
 
+#### Legal Extractor Service Integration
+- **Purpose**: Production-ready legal document extraction with REST API
+- **Architecture**: FastAPI service layer with async wrappers and comprehensive error handling
+- **Components**:
+  - `LegalExtractorService`: Async wrapper class for document extraction
+  - `extractor.py`: REST API router with 3 endpoints
+  - `legal_extractor.py`: Core extraction logic (moved from root directory)
+  - `legal_schemas.py`: Pydantic V2 models for legal document structures
+- **API Endpoints**: 3 REST endpoints with tag-based organization
+- **Testing**: Comprehensive test suite with 13 tests, all passing
+- **Integration**: Fully integrated with main FastAPI monorepo application
+
 #### Qdrant Vector Database
 - **Purpose**: High-performance vector similarity search
 - **Integration**: Python client with async operations
@@ -266,6 +312,14 @@ graph TD
 conda activate langgraph
 pip install -r requirements.txt
 
+# Start Analyzer API (Port 8000)
+cd Helper-APIs/document-analyzer-api
+python -m uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+
+# Start Root API (Port 8001) - New Terminal
+cd ../..
+python -m uvicorn main:app --host 0.0.0.0 --port 8001 --reload
+
 # Database setup
 docker run -d -p 27017:27017 mongo:latest
 docker run -d -p 6333:6333 qdrant/qdrant
@@ -273,6 +327,13 @@ docker run -d -p 6333:6333 qdrant/qdrant
 # Google Cloud setup
 export GOOGLE_APPLICATION_CREDENTIALS="service-account.json"
 ```
+
+### API Architecture Overview
+- **Root API (Port 8001)**: Main entry point with document upload and proxy routing
+- **Analyzer API (Port 8000)**: Specialized document analysis with LangExtract integration
+- **Proxy Communication**: httpx-based routing between APIs with error handling
+- **Health Monitoring**: Independent health checks on both ports
+- **API Documentation**: OpenAPI docs available at /docs on both APIs
 
 ### Configuration Management
 - **Environment Variables**: Sensitive configuration via .env files
@@ -338,4 +399,4 @@ export GOOGLE_APPLICATION_CREDENTIALS="service-account.json"
 
 ---
 
-*Document Version: 1.1 | Last Updated: September 18, 2025 | Technical Lead: Development Team*
+*Document Version: 1.3 | Last Updated: September 21, 2025 | Technical Lead: Development Team*

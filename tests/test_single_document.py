@@ -7,7 +7,7 @@ import os
 import json
 from pathlib import Path
 from dotenv import load_dotenv
-from improved_legal_extractor import ImprovedLegalDocumentExtractor as LegalDocumentExtractor
+from legal_document_extractor import LegalDocumentExtractor
 
 # Load environment variables
 load_dotenv()

@@ -10,14 +10,19 @@ Legal Clarity is a **comprehensive AI-powered legal document analysis platform**
 graph TB
     subgraph "User Layer"
         UI[Web Interface]
-        API[REST API ✅ ACTIVE]
-        Luna[Luna AI Chatbot - Planned]
+        API[REST API ✅ ACTIVE - Ports 8000/8001]
+        Luna[Luna AI Chatbot - Next Sprint]
     end
 
-    subgraph "Application Layer"
+    subgraph "Application Layer - Root API (Port 8001)"
         RAG[RAG Chatbot Service ✅ IMPLEMENTED]
         DOC[Document Upload Service ✅ IMPLEMENTED]
+        PROXY[Proxy Router to Analyzer ✅ IMPLEMENTED]
+    end
+
+    subgraph "Application Layer - Analyzer API (Port 8000)"
         ANALYZER[Document Analyzer Service ✅ IMPLEMENTED]
+        LEXTRACT[Legal Extractor Service ✅ IMPLEMENTED]
     end
 
     subgraph "AI Processing Layer"
@@ -34,27 +39,33 @@ graph TB
     end
 
     subgraph "Infrastructure Layer"
-        FASTAPI[FastAPI Framework ✅ ACTIVE Port 8004]
+        FASTAPI[FastAPI Framework ✅ ACTIVE]
         PYDANTIC_V2[Pydantic V2 ✅ MIGRATED]
         TAGS[API Tags Organization ✅ IMPLEMENTED]
+        PROXY_COMM[Proxy Communication ✅ IMPLEMENTED]
     end
 
     UI --> API
     API --> RAG
     API --> DOC
-    API --> ANALYZER
+    API --> PROXY
+    PROXY --> ANALYZER
+    ANALYZER --> LEXTRACT
 
     RAG --> GEMINI
     DOC --> LANGEXTRACT
     ANALYZER --> DOCAI
+    LEXTRACT --> LANGEXTRACT
 
     RAG --> QDRANT
     DOC --> MONGODB
     DOC --> GCS
     ANALYZER --> MONGODB
+    LEXTRACT --> MONGODB
 
     FASTAPI --> PYDANTIC_V2
     FASTAPI --> TAGS
+    FASTAPI --> PROXY_COMM
 ```
 
 ## Core System Components
@@ -102,6 +113,21 @@ graph TD
 - **Accuracy**: 100% accuracy on test documents
 - **Real Results**: Extracted "M/s. Khivraj Tech Park Pvt. Ltd." (Lessor) and "M/s. Force10 Networks India Pvt. Ltd." (Lessee)
 - **Integration**: No mock implementations - real API calls throughout
+
+**Legal Extractor Service**:
+- **Purpose**: Production-ready legal document extraction with REST API
+- **Architecture**: FastAPI service layer with async wrapper
+- **Components**:
+  - `LegalExtractorService`: Async wrapper for document extraction
+  - `extractor.py`: REST API endpoints for legal extraction
+  - `legal_extractor.py`: Core extraction logic (moved from root)
+  - `legal_schemas.py`: Pydantic models for legal documents
+- **API Endpoints**:
+  - `POST /api/extractor/extract`: Extract clauses and relationships
+  - `POST /api/extractor/structured`: Create structured legal documents
+  - `GET /api/extractor/health`: Service health check
+- **Integration**: Fully integrated with main FastAPI application
+- **Testing**: Comprehensive test suite with 13 tests, all passing
 
 ### 2. RAG-Powered Knowledge Base
 
@@ -267,7 +293,87 @@ graph TD
 
 ### RESTful API Design
 
-#### Core API Endpoints Structure (Tag-Based Organization)
+### Core API Endpoints Structure (Tag-Based Organization) - **DUAL-API ARCHITECTURE**
+```
+Legal Clarity API v1.0 ✅ ACTIVE on Ports 8000/8001
+├── 📊 Health (tag: health)
+│   ├── GET    /health                        # System health check ✅ ACTIVE
+│   └── GET    /                              # API information and status ✅ ACTIVE
+├── 📄 Documents (tag: documents) - Port 8001
+│   ├── POST   /documents/upload               # Single document upload ✅ TESTED
+│   ├── POST   /documents/upload-multiple      # Bulk upload
+│   ├── GET    /documents/{document_id}        # Get document details
+│   ├── GET    /documents                      # List user documents
+│   ├── DELETE /documents/{document_id}        # Delete document
+│   └── GET    /documents/{document_id}/url    # Signed download URL
+├── 🔍 Analyzer (tag: analyzer) - Ports 8000/8001
+│   ├── POST   /analyzer/analyze               # Analyze document with AI ✅ IMPLEMENTED (Proxy)
+│   ├── GET    /analyzer/results/{doc_id}      # Get analysis results ✅ IMPLEMENTED (Proxy)
+│   ├── GET    /analyzer/documents             # List analyzed documents ✅ IMPLEMENTED (Proxy)
+│   ├── GET    /analyzer/stats/{user_id}       # Get user statistics ✅ IMPLEMENTED (Proxy)
+│   ├── DELETE /analyzer/results/{doc_id}      # Delete analysis results ✅ IMPLEMENTED (Proxy)
+│   └── GET    /analyzer/health                # Analyzer health check ✅ IMPLEMENTED (Proxy)
+├── 🔍 Document Analysis (tag: Document Analysis) - Port 8001 - **ROUTER VISIBILITY FIXED**
+│   ├── POST   /api/analyzer/analyze           # Analyze document with AI ✅ VISIBLE (Simplified)
+│   ├── GET    /api/analyzer/results/{doc_id}  # Get analysis results ✅ VISIBLE (Simplified)
+│   └── GET    /api/analyzer/health            # Analyzer health check ✅ VISIBLE (Simplified)
+├── ⚖️ Legal Extraction (tag: Legal Extraction) - Port 8001 - **ROUTER VISIBILITY FIXED**
+│   ├── POST   /api/extractor/extract          # Extract clauses from documents ✅ VISIBLE (Simplified)
+│   ├── GET    /api/extractor/results/{doc_id} # Get extraction results ✅ VISIBLE (Simplified)
+│   └── GET    /api/extractor/health           # Legal extractor health check ✅ VISIBLE (Simplified)
+├── 🗄️ VectorDB (tag: vectordb) - Port 8001
+│   ├── POST   /chat/query                     # Submit query with context ✅ IMPLEMENTED
+│   ├── GET    /chat/history                   # Retrieve conversation history ✅ IMPLEMENTED
+│   ├── POST   /chat/feedback                  # Submit user feedback ✅ IMPLEMENTED
+│   ├── GET    /chat/suggestions               # Get suggested follow-up questions ✅ IMPLEMENTED
+│   └── GET    /vectordb/status                # VectorDB status endpoint ✅ IMPLEMENTED
+└── 🔧 Admin (Planned)                        # Administrative endpoints
+```
+
+#### API Architecture Notes
+- **Port 8001 (Root API)**: Main entry point with document upload and proxy routing to analyzer
+- **Port 8000 (Analyzer API)**: Specialized document analysis with LangExtract integration
+- **Proxy Communication**: httpx-based routing enables seamless cross-API functionality
+- **Router Visibility**: Fixed tag mismatch issue - all three sections now visible in API documentation
+- **Simplified Endpoints**: Document Analysis and Legal Extraction endpoints are visible but use simplified implementations without full Pydantic schemas, parameters, or example values
+```
+Legal Clarity API v1.0 ✅ ACTIVE on Ports 8000/8001
+├── 📊 Health (tag: health)
+│   ├── GET    /health                        # System health check ✅ ACTIVE
+│   └── GET    /                               # API information and status ✅ ACTIVE
+├── 📄 Documents (tag: documents) - Port 8001
+│   ├── POST   /documents/upload               # Single document upload ✅ TESTED
+│   ├── POST   /documents/upload-multiple      # Bulk upload
+│   ├── GET    /documents/{document_id}        # Get document details
+│   ├── GET    /documents                      # List user documents
+│   ├── DELETE /documents/{document_id}        # Delete document
+│   └── GET    /documents/{document_id}/url    # Signed download URL
+├── 🔍 Analyzer (tag: analyzer) - Ports 8000/8001
+│   ├── POST   /analyzer/analyze               # Analyze document with AI ✅ IMPLEMENTED (Proxy)
+│   ├── GET    /analyzer/results/{doc_id}      # Get analysis results ✅ IMPLEMENTED (Proxy)
+│   ├── GET    /analyzer/documents             # List analyzed documents ✅ IMPLEMENTED (Proxy)
+│   ├── GET    /analyzer/stats/{user_id}       # Get user statistics ✅ IMPLEMENTED (Proxy)
+│   ├── DELETE /analyzer/results/{doc_id}      # Delete analysis results ✅ IMPLEMENTED (Proxy)
+│   └── GET    /analyzer/health                # Analyzer health check ✅ IMPLEMENTED (Proxy)
+├── 🔧 Legal Extractor (tag: legal-extraction) - Port 8000
+│   ├── POST   /api/extractor/extract          # Extract clauses from documents ✅ IMPLEMENTED
+│   ├── POST   /api/extractor/structured       # Create structured documents ✅ IMPLEMENTED
+│   ├── GET    /api/extractor/health           # Legal extractor health check ✅ IMPLEMENTED
+│   └── GET    /api/extractor/docs             # Legal extraction documentation
+├── 🗄️ VectorDB (tag: vectordb) - Port 8001
+│   ├── POST   /chat/query                     # Submit query with context ✅ IMPLEMENTED
+│   ├── GET    /chat/history                   # Retrieve conversation history ✅ IMPLEMENTED
+│   ├── POST   /chat/feedback                  # Submit user feedback ✅ IMPLEMENTED
+│   ├── GET    /chat/suggestions               # Get suggested follow-up questions ✅ IMPLEMENTED
+│   └── GET    /vectordb/status                # VectorDB status endpoint ✅ IMPLEMENTED
+└── 🔧 Admin (Planned)                        # Administrative endpoints
+```
+
+#### API Architecture Notes
+- **Port 8001 (Root API)**: Main entry point with document upload and proxy routing to analyzer
+- **Port 8000 (Analyzer API)**: Specialized document analysis with LangExtract integration
+- **Proxy Communication**: httpx-based routing enables seamless cross-API functionality
+- **Health Monitoring**: Independent health checks on both ports with comprehensive logging
 ```
 Legal Clarity API v1.0 ✅ ACTIVE on Port 8004
 ├── 📊 Health (tag: health)
@@ -287,6 +393,11 @@ Legal Clarity API v1.0 ✅ ACTIVE on Port 8004
 │   ├── GET    /analyzer/stats/{user_id}      # Get user statistics ✅ IMPLEMENTED
 │   ├── DELETE /analyzer/results/{doc_id}     # Delete analysis results ✅ IMPLEMENTED
 │   └── GET    /analyzer/health               # Analyzer health check ✅ IMPLEMENTED
+├── 🔧 Legal Extractor (tag: legal-extraction)
+│   ├── POST   /api/extractor/extract         # Extract clauses from documents ✅ IMPLEMENTED
+│   ├── POST   /api/extractor/structured      # Create structured documents ✅ IMPLEMENTED
+│   ├── GET    /api/extractor/health          # Legal extractor health check ✅ IMPLEMENTED
+│   └── GET    /api/extractor/docs            # Legal extraction documentation
 ├── 🗄️ VectorDB (tag: vectordb)
 │   ├── POST   /chat/query                    # Submit query with context ✅ IMPLEMENTED
 │   ├── GET    /chat/history                  # Retrieve conversation history ✅ IMPLEMENTED
@@ -402,11 +513,17 @@ graph TD
         MOBILE[Mobile App - Future]
     end
 
-    subgraph "Application Layer"
-        MAIN[FastAPI Monorepo ✅ ACTIVE Port 8004]
+    subgraph "Application Layer - Root API (Port 8001)"
+        ROOT_API[Root FastAPI ✅ ACTIVE]
         DOC_UPLOAD[Document Upload Service ✅ INTEGRATED]
-        DOC_ANALYZER[Document Analyzer Service ✅ INTEGRATED]
+        PROXY_ROUTER[Proxy Router ✅ IMPLEMENTED]
         RAG_SYSTEM[RAG Chatbot System ✅ INTEGRATED]
+    end
+
+    subgraph "Application Layer - Analyzer API (Port 8000)"
+        ANALYZER_API[Analyzer FastAPI ✅ ACTIVE]
+        LANGEXTRACT_SVC[LangExtract Service ✅ INTEGRATED]
+        LEGAL_EXTRACTOR[Legal Extractor Service ✅ INTEGRATED]
     end
 
     subgraph "Data Layer"
@@ -417,7 +534,6 @@ graph TD
 
     subgraph "AI Services Layer"
         GEMINI[Gemini API ✅ INTEGRATED]
-        LANGEXTRACT[LangExtract ✅ INTEGRATED]
         DOCAI[Document AI ✅ INTEGRATED]
         VERTEX[Vertex AI ✅ INTEGRATED]
     end
@@ -426,34 +542,42 @@ graph TD
         PYDANTIC_V2[Pydantic V2 ✅ MIGRATED]
         TAGS[API Tags ✅ ORGANIZED]
         HEALTH[Health Monitoring ✅ ACTIVE]
+        PROXY_COMM[Proxy Communication ✅ IMPLEMENTED]
     end
 
-    WEB --> MAIN
-    MAIN --> DOC_UPLOAD
-    MAIN --> DOC_ANALYZER
-    MAIN --> RAG_SYSTEM
+    WEB --> ROOT_API
+    ROOT_API --> DOC_UPLOAD
+    ROOT_API --> PROXY_ROUTER
+    ROOT_API --> RAG_SYSTEM
+    PROXY_ROUTER --> ANALYZER_API
+    ANALYZER_API --> LANGEXTRACT_SVC
+    ANALYZER_API --> LEGAL_EXTRACTOR
 
     DOC_UPLOAD --> MONGODB
     DOC_UPLOAD --> GCS
-    DOC_ANALYZER --> MONGODB
+    ANALYZER_API --> MONGODB
     RAG_SYSTEM --> QDRANT
 
-    DOC_UPLOAD --> LANGEXTRACT
-    DOC_ANALYZER --> GEMINI
-    DOC_ANALYZER --> DOCAI
+    LANGEXTRACT_SVC --> GEMINI
+    LEGAL_EXTRACTOR --> DOCAI
     RAG_SYSTEM --> VERTEX
 
-    MAIN --> PYDANTIC_V2
-    MAIN --> TAGS
-    MAIN --> HEALTH
+    ROOT_API --> PYDANTIC_V2
+    ROOT_API --> TAGS
+    ROOT_API --> HEALTH
+    ROOT_API --> PROXY_COMM
+    ANALYZER_API --> PYDANTIC_V2
+    ANALYZER_API --> TAGS
+    ANALYZER_API --> HEALTH
 ```
 
 #### Production Deployment Status
-- **Current State**: Monorepo FastAPI application ready for deployment
-- **Google Cloud Run**: Ready for containerized deployment
-- **Environment**: All configurations centralized in root .env
-- **Monitoring**: Health endpoints and error handling implemented
-- **Scalability**: Stateless design supports horizontal scaling
+- **Dual-API Architecture**: ✅ Root API (8001) and Analyzer API (8000) running independently
+- **Proxy Integration**: ✅ httpx-based communication between APIs with error handling
+- **Google Cloud Run**: Ready for containerized deployment of both APIs
+- **Environment**: All configurations centralized with proper separation
+- **Monitoring**: Independent health checks and comprehensive logging for both APIs
+- **Scalability**: Stateless design supports horizontal scaling of both API instances
 
 #### Container Strategy
 - **Single Responsibility**: Each container handles one service
@@ -578,4 +702,4 @@ graph TD
 
 ---
 
-*Document Version: 1.1 | Last Updated: September 18, 2025 | System Architecture Team*
+*Document Version: 1.3 | Last Updated: September 21, 2025 | System Architecture Team*

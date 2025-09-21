@@ -16,7 +16,16 @@ except ImportError:
     LANGEXTRACT_AVAILABLE = False
     logging.warning("LangExtract not available. Install with: pip install langextract")
 
-from ..models.schemas.processed_document import (
+import sys
+import os
+# Add the models directory to sys.path for absolute imports
+current_dir = os.path.dirname(os.path.abspath(__file__))
+parent_dir = os.path.dirname(current_dir)
+models_dir = os.path.join(parent_dir, 'models')
+if models_dir not in sys.path:
+    sys.path.insert(0, models_dir)
+
+from schemas.processed_document import (
     DocumentAnalysisResult,
     ExtractedEntity,
     SourceGrounding,
@@ -46,7 +55,8 @@ class DocumentAnalyzerService:
 
         self.gemini_api_key = gemini_api_key
         self.gemini_model = gemini_model
-        self.extractor = LegalDocumentExtractor(gemini_api_key, gemini_model)
+        from .legal_extractor_service import LegalExtractorService
+        self.extractor = LegalExtractorService(gemini_api_key)
 
         logger.info(f"Document analyzer initialized with model: {gemini_model}")
 

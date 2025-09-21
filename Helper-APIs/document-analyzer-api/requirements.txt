@@ -10,6 +10,7 @@ pymongo
 google-cloud-storage
 google-generativeai
 langextract
+json-repair
 
 # Document processing
 PyPDF2

@@ -5,7 +5,7 @@ Tests real clause and relationship extraction without mocks
 
 import os
 from dotenv import load_dotenv
-from improved_legal_extractor import ImprovedLegalDocumentExtractor as LegalDocumentExtractor
+from legal_document_extractor import LegalDocumentExtractor
 
 # Load environment variables
 load_dotenv()

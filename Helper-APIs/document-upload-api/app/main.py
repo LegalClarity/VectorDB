@@ -9,10 +9,10 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from fastapi.responses import JSONResponse
 
-from app.config import settings
-from app.database import db_manager
-from app.gcs_service import gcs_service
-from app.routers import documents
+from config import settings
+from database import db_manager
+from gcs_service import gcs_service
+from routers import documents
 
 # Configure logging
 logging.basicConfig(

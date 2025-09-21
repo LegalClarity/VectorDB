@@ -84,12 +84,12 @@ graph TB
 #### **1. Document Upload Service** (`Helper-APIs/document-upload-api/`)
 - **Purpose**: Secure file upload and storage management
 - **Features**: File validation, Google Cloud Storage integration, metadata management
-- **Endpoints**: `/documents/upload`, `/documents/{id}`
+- **Endpoints**: `/api/documents/upload`, `/api/documents/{id}`
 
 #### **2. Document Analyzer Service** (`Helper-APIs/document-analyzer-api/`)
 - **Purpose**: AI-powered legal document analysis
 - **Features**: Entity extraction, risk assessment, compliance checking
-- **Endpoints**: `/analyzer/analyze`, `/analyzer/results/{id}`
+- **Endpoints**: `/api/analyzer/analyze`, `/api/analyzer/results/{id}`, `/api/extractor/extract`
 
 #### **3. RAG Chatbot Service** (`VectorDB Main/`)
 - **Purpose**: Intelligent legal document Q&A system
@@ -97,8 +97,13 @@ graph TB
 - **Endpoints**: `/chat/query`, `/chat/history`
 
 #### **4. Unified API Gateway** (`main.py`)
-- **Purpose**: Single entry point for all services
+- **Purpose**: Single entry point for all services with consolidated routers
 - **Features**: Router consolidation, CORS handling, health monitoring
+- **Port**: 8001 (main consolidated API)
+- **Endpoints**: 
+  - Document upload: `/api/documents/*`
+  - Document analysis: `/api/analyzer/*` 
+  - Legal extraction: `/api/extractor/*`
 
 ---
 
@@ -166,9 +171,11 @@ uvicorn main:app --host 0.0.0.0 --port 8000 --reload
 ### 4. Access the API
 
 The API will be available at:
-- **Main API**: http://localhost:8000
-- **API Documentation**: http://localhost:8000/docs
-- **Health Check**: http://localhost:8000/health
+- **Main Consolidated API**: http://localhost:8001
+- **API Documentation**: http://localhost:8001/docs
+- **Health Check**: http://localhost:8001/health
+
+All services are now unified under a single API endpoint:
 
 ---
 
@@ -178,22 +185,22 @@ The API will be available at:
 
 #### **Document Upload API**
 ```http
-POST /documents/upload
+POST /api/documents/upload
 Content-Type: multipart/form-data
 
 # Upload a legal document
-curl -X POST "http://localhost:8000/documents/upload?document_type=rental" \
+curl -X POST "http://localhost:8001/api/documents/upload?document_type=rental" \
      -F "file=@rental_agreement.pdf"
 ```
 
 ```http
-GET /documents/{document_id}
+GET /api/documents/{document_id}
 # Retrieve document information
 ```
 
 #### **Document Analyzer API**
 ```http
-POST /analyzer/analyze
+POST /api/analyzer/analyze
 Content-Type: application/json
 
 {
@@ -204,8 +211,25 @@ Content-Type: application/json
 ```
 
 ```http
-GET /analyzer/results/{document_id}?user_id=user_789
+GET /api/analyzer/results/{document_id}?user_id=user_789
 # Get analysis results
+```
+
+#### **Legal Extractor API**
+```http
+POST /api/extractor/extract
+Content-Type: application/json
+
+{
+  "document_id": "doc_123456",
+  "document_type": "rental",
+  "user_id": "user_789"
+}
+```
+
+```http
+GET /api/extractor/results/{document_id}?user_id=user_789
+# Get extraction results
 ```
 
 #### **RAG Chatbot API**

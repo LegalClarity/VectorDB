@@ -1,0 +1,124 @@
+{
+  "test_start_time": "2025-09-20T01:44:59.917714",
+  "phases": {
+    "upload": {
+      "status": "completed",
+      "uploaded_count": 5,
+      "documents": [
+        {
+          "filename": "Group-Loan-Agreement.pdf",
+          "document_id": "fb0851a4-9a1c-41b9-bcc2-ab929440e0a8",
+          "gcs_url": "gs://user_documents-173119/users/test-user-123/fb0851a4-9a1c-41b9-bcc2-ab929440e0a8",
+          "upload_time": "2025-09-20T01:45:07.635507"
+        },
+        {
+          "filename": "Independent-Contractor_Freelancer.pdf",
+          "document_id": "7c0e80aa-3a48-41cd-b46a-488f3cdbd000",
+          "gcs_url": "gs://user_documents-173119/users/test-user-123/7c0e80aa-3a48-41cd-b46a-488f3cdbd000",
+          "upload_time": "2025-09-20T01:45:10.139862"
+        },
+        {
+          "filename": "lease agreement.pdf",
+          "document_id": "99beac43-e80e-4303-8556-98c8578224c2",
+          "gcs_url": "gs://user_documents-173119/users/test-user-123/99beac43-e80e-4303-8556-98c8578224c2",
+          "upload_time": "2025-09-20T01:45:12.687557"
+        },
+        {
+          "filename": "PL-Agreement.pdf",
+          "document_id": "df0edc9c-1052-43d0-8260-b0aa2e33dc6b",
+          "gcs_url": "gs://user_documents-173119/users/test-user-123/df0edc9c-1052-43d0-8260-b0aa2e33dc6b",
+          "upload_time": "2025-09-20T01:45:15.494922"
+        },
+        {
+          "filename": "website-terms-and-conditions-format.pdf",
+          "document_id": "3ba20e9c-d172-410e-a48b-e577ef4a23e7",
+          "gcs_url": "gs://user_documents-173119/users/test-user-123/3ba20e9c-d172-410e-a48b-e577ef4a23e7",
+          "upload_time": "2025-09-20T01:45:18.094717"
+        }
+      ]
+    },
+    "extraction": {
+      "status": "completed",
+      "extracted_count": 0,
+      "documents": [
+        {
+          "document_id": "fb0851a4-9a1c-41b9-bcc2-ab929440e0a8",
+          "extraction_result": null,
+          "extraction_time": "2025-09-20T01:45:20.122107",
+          "status": "failed",
+          "error": "{\"detail\":\"Not Found\"}"
+        },
+        {
+          "document_id": "7c0e80aa-3a48-41cd-b46a-488f3cdbd000",
+          "extraction_result": null,
+          "extraction_time": "2025-09-20T01:45:22.144046",
+          "status": "failed",
+          "error": "{\"detail\":\"Not Found\"}"
+        },
+        {
+          "document_id": "99beac43-e80e-4303-8556-98c8578224c2",
+          "extraction_result": null,
+          "extraction_time": "2025-09-20T01:45:24.186895",
+          "status": "failed",
+          "error": "{\"detail\":\"Not Found\"}"
+        },
+        {
+          "document_id": "df0edc9c-1052-43d0-8260-b0aa2e33dc6b",
+          "extraction_result": null,
+          "extraction_time": "2025-09-20T01:45:26.203209",
+          "status": "failed",
+          "error": "{\"detail\":\"Not Found\"}"
+        },
+        {
+          "document_id": "3ba20e9c-d172-410e-a48b-e577ef4a23e7",
+          "extraction_result": null,
+          "extraction_time": "2025-09-20T01:45:28.220212",
+          "status": "failed",
+          "error": "{\"detail\":\"Not Found\"}"
+        }
+      ]
+    },
+    "specific_extraction": {
+      "document_ids": [
+        "e12829e2-268a-4aa2-acfe-7bb4710c0e30",
+        "4a2f8446-b236-4ba6-9f49-05366def62a7"
+      ],
+      "results": [
+        {
+          "document_id": "e12829e2-268a-4aa2-acfe-7bb4710c0e30",
+          "extraction_result": null,
+          "extraction_time": "2025-09-20T01:45:30.251423",
+          "status": "failed",
+          "error": "{\"detail\":\"Not Found\"}"
+        },
+        {
+          "document_id": "4a2f8446-b236-4ba6-9f49-05366def62a7",
+          "extraction_result": null,
+          "extraction_time": "2025-09-20T01:45:32.265002",
+          "status": "failed",
+          "error": "{\"detail\":\"Not Found\"}"
+        }
+      ]
+    },
+    "mongodb_verification": {
+      "total_documents": 5,
+      "extraction_attempts": 2,
+      "successful_extractions": 0,
+      "mongodb_storage_status": [
+        {
+          "document_id": "e12829e2-268a-4aa2-acfe-7bb4710c0e30",
+          "status": "not_found",
+          "error": "{\"detail\":\"Not Found\"}"
+        },
+        {
+          "document_id": "4a2f8446-b236-4ba6-9f49-05366def62a7",
+          "status": "not_found",
+          "error": "{\"detail\":\"Not Found\"}"
+        }
+      ],
+      "errors": []
+    }
+  },
+  "overall_status": "success",
+  "test_end_time": "2025-09-20T01:45:36.345843"
+}

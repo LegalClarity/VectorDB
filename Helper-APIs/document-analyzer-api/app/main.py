@@ -5,15 +5,23 @@ Legal document analysis using LangExtract and Gemini Flash
 
 import logging
 import os
+import sys
 import time
+from pathlib import Path
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from fastapi.responses import JSONResponse
 
+# Add the current directory to Python path for local imports
+current_dir = Path(__file__).parent
+sys.path.insert(0, str(current_dir))
+
 from .config import settings
 from .routers.analyzer import router as analyzer_router
+from .routers.extractor import router as extractor_router
+from .services.mongodb_service import initialize_mongodb_service, cleanup_mongodb_service
 
 # Configure logging
 logging.basicConfig(
@@ -44,6 +52,10 @@ async def lifespan(app: FastAPI):
         elif not settings.GOOGLE_CREDENTIALS_PATH:
             logger.warning("GOOGLE_APPLICATION_CREDENTIALS not set - using default credentials")
 
+        # Initialize MongoDB service
+        await initialize_mongodb_service(settings.MONGO_URI, settings.MONGO_DB)
+        logger.info("MongoDB service initialized")
+
         logger.info("Document Analyzer API started successfully")
 
     except Exception as e:
@@ -54,6 +66,13 @@ async def lifespan(app: FastAPI):
 
     # Shutdown
     logger.info("Shutting down Document Analyzer API...")
+    try:
+        # Cleanup MongoDB service
+        await cleanup_mongodb_service()
+        logger.info("MongoDB service cleaned up")
+    except Exception as e:
+        logger.error(f"Error during MongoDB cleanup: {e}")
+    
     logger.info("Document Analyzer API shutdown complete")
 
 
@@ -162,6 +181,12 @@ app.include_router(
     tags=["Document Analyzer API"]
 )
 
+app.include_router(
+    extractor_router,
+    prefix="/api/extractor",
+    tags=["Legal Document Extraction"]
+)
+
 
 # Root endpoint
 @app.get("/")
@@ -176,7 +201,10 @@ async def root():
             "results": "/api/analyzer/results/{document_id} (GET)",
             "documents": "/api/analyzer/documents (GET)",
             "stats": "/api/analyzer/stats/{user_id} (GET)",
-            "health": "/api/analyzer/health (GET)"
+            "health": "/api/analyzer/health (GET)",
+            "extract": "/api/extractor/extract (POST)",
+            "structured": "/api/extractor/structured (POST)",
+            "extractor_health": "/api/extractor/health (GET)"
         },
         "docs": "/docs",
         "health": "/health"
@@ -227,7 +255,10 @@ async def service_info():
             "Terms of Service analysis",
             "Risk assessment",
             "Compliance checking",
-            "Financial analysis"
+            "Financial analysis",
+            "Legal clause extraction",
+            "Document structuring",
+            "Relationship analysis"
         ],
         "technologies": [
             "LangExtract",
@@ -239,15 +270,3 @@ async def service_info():
         "supported_formats": ["PDF", "DOCX", "TXT"],
         "max_file_size": f"{settings.MAX_FILE_SIZE_MB}MB"
     }
-
-
-if __name__ == "__main__":
-    import uvicorn
-
-    uvicorn.run(
-        "app.main:app",
-        host=settings.API_HOST,
-        port=settings.API_PORT,
-        reload=settings.DEBUG,
-        log_level=settings.LOG_LEVEL.lower()
-    )

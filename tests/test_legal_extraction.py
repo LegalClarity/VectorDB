@@ -8,11 +8,7 @@ import pytest
 import time
 import os
 from pathlib import Path
-from improved_legal_extractor import ImprovedLegalDocumentExtractor as LegalDocumentExtractor
-import sys
-import os
-sys.path.append(os.path.join(os.path.dirname(__file__), 'Helper-APIs', 'document-analyzer-api'))
-
+from legal_document_extractor import LegalDocumentExtractor
 from legal_document_schemas import DocumentType, ClauseType, RelationshipType
 
 

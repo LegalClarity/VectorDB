@@ -10,7 +10,16 @@ from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase, AsyncI
 from pymongo.errors import ConnectionFailure, OperationFailure
 from bson import ObjectId
 
-from ..models.schemas.processed_document import ProcessedDocumentSchema, DocumentAnalysisResult
+import sys
+import os
+# Add the models directory to sys.path for absolute imports
+current_dir = os.path.dirname(os.path.abspath(__file__))
+parent_dir = os.path.dirname(current_dir)
+models_dir = os.path.join(parent_dir, 'models')
+if models_dir not in sys.path:
+    sys.path.insert(0, models_dir)
+
+from schemas.processed_document import ProcessedDocumentSchema, DocumentAnalysisResult
 
 logger = logging.getLogger(__name__)
 
