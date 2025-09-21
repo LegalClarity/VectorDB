@@ -5,7 +5,7 @@ FastAPI-compatible wrapper for legal document extraction
 
 import asyncio
 from typing import Dict, Any, Optional
-from .legal_extractor import ImprovedLegalDocumentExtractor
+from .improved_legal_extractor import ImprovedLegalDocumentExtractor
 from ..models.schemas.legal_schemas import DocumentType
 
 
@@ -21,13 +21,27 @@ class LegalExtractorService:
         document_type: str
     ) -> Dict[str, Any]:
         """Async wrapper for clause and relationship extraction"""
-        loop = asyncio.get_event_loop()
-        return await loop.run_in_executor(
-            None,
-            self.extractor.extract_clauses_and_relationships,
+        # The extractor method is already async, so call it directly
+        result = await self.extractor.extract_clauses_and_relationships(
             document_text,
             document_type
         )
+        # Convert ExtractionResult to dict for JSON serialization
+        if hasattr(result, 'dict'):
+            return result.dict()
+        elif hasattr(result, 'model_dump'):
+            return result.model_dump()
+        else:
+            # Manual conversion for the ExtractionResult
+            return {
+                "document_id": result.document_id,
+                "document_type": result.document_type.value if hasattr(result.document_type, 'value') else str(result.document_type),
+                "extracted_clauses": [clause.dict() if hasattr(clause, 'dict') else clause.model_dump() for clause in result.extracted_clauses],
+                "clause_relationships": [rel.dict() if hasattr(rel, 'dict') else rel.model_dump() for rel in result.clause_relationships],
+                "confidence_score": result.confidence_score,
+                "processing_time_seconds": result.processing_time_seconds,
+                "extraction_metadata": result.extraction_metadata
+            }
 
     async def create_structured_document(
         self,

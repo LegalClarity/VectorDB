@@ -110,33 +110,70 @@ class OldDocument(BaseModel):
         allow_population_by_field_name = True  # Causes warnings
 ```
 
-### Asynchronous Programming Patterns
+### Proxy Communication Patterns
 
-#### Async/Await Best Practices
-- **Async by Default**: All I/O operations use async/await
-- **Context Managers**: Use `asynccontextmanager` for resource management
-- **Task Groups**: Use `asyncio.gather()` for concurrent operations
-- **Timeout Handling**: Implement timeouts for all external API calls
+#### API-to-API Proxy Routing Pattern
+Legal Clarity implements a **dual-API architecture** with proxy routing between services:
 
 ```python
-# ✅ Async Context Manager Pattern
-@asynccontextmanager
-async def get_database_connection():
-    connection = await db_manager.connect()
-    try:
-        yield connection
-    finally:
-        await db_manager.disconnect()
+# ✅ Proxy Communication Pattern
+class ProxyRouter:
+    def __init__(self, target_url: str, client: httpx.AsyncClient):
+        self.target_url = target_url
+        self.client = client
 
-# ✅ Concurrent API Calls Pattern
-async def process_multiple_documents(document_ids: List[str]):
-    tasks = [
-        process_single_document(doc_id)
-        for doc_id in document_ids
-    ]
-    results = await asyncio.gather(*tasks, return_exceptions=True)
-    return results
+    async def proxy_request(
+        self,
+        method: str,
+        path: str,
+        data: Optional[dict] = None,
+        params: Optional[dict] = None
+    ) -> dict:
+        """Proxy HTTP requests to target API with error handling"""
+        try:
+            url = f"{self.target_url}{path}"
+            response = await self.client.request(
+                method=method,
+                url=url,
+                json=data,
+                params=params,
+                timeout=30.0
+            )
+            response.raise_for_status()
+            return response.json()
+        except httpx.HTTPStatusError as e:
+            logger.error(f"Proxy request failed: {e.response.status_code}")
+            raise HTTPException(
+                status_code=e.response.status_code,
+                detail=f"Analyzer API error: {e.response.text}"
+            )
+        except httpx.RequestError as e:
+            logger.error(f"Proxy connection failed: {str(e)}")
+            raise HTTPException(
+                status_code=503,
+                detail="Analyzer service temporarily unavailable"
+            )
+
+# Usage in FastAPI endpoint
+@app.post("/analyzer/analyze", response_model=AnalysisResponse)
+async def analyze_document_proxy(
+    request: AnalyzeDocumentRequest,
+    proxy_router: ProxyRouter = Depends(get_proxy_router)
+):
+    """Proxy document analysis requests to analyzer API"""
+    return await proxy_router.proxy_request(
+        method="POST",
+        path="/api/analyzer/analyze",
+        data=request.dict()
+    )
 ```
+
+#### Benefits of Proxy Pattern
+- **Service Separation**: Clean separation between upload and analysis concerns
+- **Independent Scaling**: APIs can be scaled independently based on load
+- **Error Isolation**: Failures in one API don't affect the other
+- **Deployment Flexibility**: APIs can be deployed to different environments
+- **Version Compatibility**: Different API versions can coexist
 
 ### AI Integration Patterns
 
@@ -175,65 +212,71 @@ class LegalDocumentExtractor:
         )
 ```
 
-#### Error Handling Patterns
+#### Import Path Resolution Patterns
 
-##### Custom Exception Hierarchy
+#### Relative Import Standardization
+Legal Clarity establishes **relative import patterns** to eliminate sys.path manipulation:
+
 ```python
-class LegalClarityError(Exception):
-    """Base exception for Legal Clarity application"""
-    pass
+# ✅ Relative Import Pattern (Recommended)
+from .services.legal_extractor import LegalExtractorService
+from .routers.extractor import router as extractor_router
+from .models.schemas import ExtractionRequest, ExtractionResponse
 
-class DocumentProcessingError(LegalClarityError):
-    """Raised when document processing fails"""
-    pass
+# ❌ Anti-pattern: sys.path manipulation
+import sys
+import os
+sys.path.append(os.path.join(os.path.dirname(__file__), "..", ".."))
+from legal_extractor import LegalExtractorService  # Unreliable
 
-class ValidationError(LegalClarityError):
-    """Raised when input validation fails"""
-    pass
+# ✅ Path-based Import for Cross-Module Access
+import sys
+import os
+helper_apis_path = os.path.join(os.path.dirname(__file__), "Helper-APIs", "document-upload-api", "app")
+sys.path.insert(0, helper_apis_path)
 
-class ExternalServiceError(LegalClarityError):
-    """Raised when external service calls fail"""
-    pass
-
-class LangExtractError(LegalClarityError):
-    """Raised when LangExtract API calls fail"""
-    pass
+try:
+    from config import settings
+    from database import db_manager
+    # Use imported modules
+except ImportError as e:
+    # Fallback handling
+    logger.warning(f"Helper API modules not available: {e}")
+    # Provide mock or alternative implementations
 ```
 
-#### Error Handling Strategy
-- **Specific Exceptions**: Use specific exception types for different error conditions
-- **Context Preservation**: Include relevant context in exception messages
-- **Logging**: Log errors with appropriate severity levels
-- **Graceful Degradation**: Handle errors gracefully without crashing the application
-
+#### Uvicorn Module Path Configuration
 ```python
-# ✅ Comprehensive Error Handling
-async def safe_document_processing(document_id: str) -> ProcessingResult:
+# ✅ Correct Uvicorn Configuration
+# For app/main.py structure:
+uvicorn app.main:app --host 0.0.0.0 --port 8000
+
+# For root level main.py:
+uvicorn main:app --host 0.0.0.0 --port 8001
+
+# ❌ Incorrect Configuration (causes ModuleNotFoundError)
+uvicorn main:app  # When file is in app/main.py
+```
+
+#### Import Error Handling Strategy
+```python
+# ✅ Graceful Import Fallback Pattern
+def safe_import_module(module_path: str, fallback=None):
+    """Safely import a module with fallback handling"""
     try:
-        # Validate input
-        if not document_id:
-            raise ValidationError("Document ID cannot be empty")
+        module = importlib.import_module(module_path)
+        return module
+    except ImportError as e:
+        logger.warning(f"Failed to import {module_path}: {e}")
+        return fallback
 
-        # Process document
-        result = await process_document(document_id)
-
-        # Log success
-        logger.info(f"Successfully processed document {document_id}")
-
-        return result
-
-    except ValidationError as e:
-        logger.warning(f"Validation failed for document {document_id}: {e}")
-        raise
-
-    except ExternalServiceError as e:
-        logger.error(f"External service error for document {document_id}: {e}")
-        # Return cached result or default response
-        return ProcessingResult(status="degraded", error=str(e))
-
-    except Exception as e:
-        logger.error(f"Unexpected error processing document {document_id}: {e}")
-        raise DocumentProcessingError(f"Failed to process document: {e}")
+# Usage
+config_module = safe_import_module("config", MockConfig())
+if config_module:
+    settings = config_module.settings
+else:
+    # Use default settings
+    settings = get_default_settings()
 ```
 
 ### Database Patterns
@@ -596,4 +639,4 @@ CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
 
 ---
 
-*Document Version: 1.1 | Last Updated: September 18, 2025 | Development Standards Committee*
+*Document Version: 1.3 | Last Updated: September 21, 2025 | Development Standards Committee*

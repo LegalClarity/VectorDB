@@ -61,11 +61,12 @@ class Settings(BaseSettings):
     MAX_EXTRACTION_PASSES: int = int(os.getenv("MAX_EXTRACTION_PASSES", "2"))
     EXTRACTION_TIMEOUT_SECONDS: int = int(os.getenv("EXTRACTION_TIMEOUT_SECONDS", "300"))
 
-    class Config:
-        """Pydantic configuration"""
-        env_file = os.path.join(os.path.dirname(__file__), "..", "..", "..", ".env")  # Absolute path to root .env file
-        case_sensitive = False
-        extra = "ignore"  # Ignore extra fields from .env file
+    # Pydantic V2 Configuration
+    model_config = {
+        "env_file": os.path.join(os.path.dirname(__file__), "..", "..", "..", ".env"),  # Absolute path to root .env file
+        "case_sensitive": False,
+        "extra": "ignore"  # Ignore extra fields from .env file
+    }
 
 
 # Global settings instance

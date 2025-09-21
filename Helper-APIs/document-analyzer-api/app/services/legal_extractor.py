@@ -9,6 +9,7 @@ import logging
 import re
 import time
 import os
+import sys
 from dataclasses import dataclass
 from typing import Dict, Any, List, Optional, Tuple, Callable
 from datetime import datetime
@@ -19,7 +20,14 @@ import threading
 
 import langextract as lx
 from json_repair import repair_json
-from ..models.schemas.legal_schemas import (
+# Add the models directory to sys.path for absolute imports
+current_dir = os.path.dirname(os.path.abspath(__file__))
+parent_dir = os.path.dirname(current_dir)
+models_dir = os.path.join(parent_dir, 'models')
+if models_dir not in sys.path:
+    sys.path.insert(0, models_dir)
+
+from schemas.legal_schemas import (
     DocumentType, ClauseType, RelationshipType, LegalClause,
     ClauseRelationship, LegalDocument, ExtractionResult,
     RentalAgreement, LoanAgreement, TermsOfService

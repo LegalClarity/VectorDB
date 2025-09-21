@@ -1,0 +1,70 @@
+[
+  {
+    "test_name": "API Health Check",
+    "success": true,
+    "timestamp": 1758396255.053401,
+    "details": {
+      "message": "API is healthy - Version: 1.0.0",
+      "status": {
+        "status": "healthy",
+        "service": "document_analyzer",
+        "timestamp": 1758396255.0113595,
+        "version": "1.0.0",
+        "configuration": {
+          "gemini_model": "gemini-2.5-flash",
+          "mongo_db": "LegalClarity",
+          "gcs_bucket": "user_documents-173119"
+        }
+      }
+    }
+  },
+  {
+    "test_name": "Extract Document 1",
+    "success": true,
+    "timestamp": 1758396257.531005,
+    "details": {
+      "message": "Successfully extracted data",
+      "document_id": "e12829e2-268a-4aa2-acfe-7bb4710c0e30",
+      "extracted_fields": 7,
+      "sample_data": "{'document_id': 'error_1758396257', 'document_type': 'rental_agreement', 'extracted_clauses': [], 'clause_relationships': [], 'confidence_score': 0.0, 'processing_time_seconds': 2.1060309410095215, 'e..."
+    }
+  },
+  {
+    "test_name": "MongoDB Retrieval Document 1",
+    "success": false,
+    "timestamp": 1758396259.8147624,
+    "details": {
+      "message": "Document not found in database (404)",
+      "document_id": "e12829e2-268a-4aa2-acfe-7bb4710c0e30"
+    }
+  },
+  {
+    "test_name": "Extract Document 2",
+    "success": true,
+    "timestamp": 1758396263.0947247,
+    "details": {
+      "message": "Successfully extracted data",
+      "document_id": "4a2f8446-b236-4ba6-9f49-05366def62a7",
+      "extracted_fields": 7,
+      "sample_data": "{'document_id': 'error_1758396263', 'document_type': 'rental_agreement', 'extracted_clauses': [], 'clause_relationships': [], 'confidence_score': 0.0, 'processing_time_seconds': 2.003556966781616, 'ex..."
+    }
+  },
+  {
+    "test_name": "MongoDB Retrieval Document 2",
+    "success": false,
+    "timestamp": 1758396265.3750987,
+    "details": {
+      "message": "Document not found in database (404)",
+      "document_id": "4a2f8446-b236-4ba6-9f49-05366def62a7"
+    }
+  },
+  {
+    "test_name": "List Processed Documents",
+    "success": true,
+    "timestamp": 1758396266.6522112,
+    "details": {
+      "message": "Retrieved 0 processed documents",
+      "count": 0
+    }
+  }
+]
